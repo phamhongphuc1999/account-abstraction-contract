@@ -5,22 +5,12 @@ import chess.Piece;
 
 import java.util.Map;
 
-/**
- * Created by Tong on 12.08.
- * Eval Model.
- */
 public class EvalModel {
-    /*  [red, black] >> [PieceValue, PiecePosition, PieceControl, PieceFlexible, PieceProtect, PieceFeature]*/
-    /* However, only PieceValue and PiecePosition are implemented, so the array size is set to 2. */
     private int[][] values = new int[2][2];
 
-    /**
-     * @param player, eval the situation in player's perspective.
-     */
     public int eval(Board board, char player) {
         for (Map.Entry<String, Piece> stringPieceEntry : board.pieces.entrySet()) {
             Piece piece = stringPieceEntry.getValue();
-            /* The table in PiecePosition is for red player in default. To eval black player, needs to perform a mirror transformation. */
             int[] reversePosition = new int[]{board.BOARD_HEIGHT - 1 - piece.position[0], piece.position[1]};
             switch (piece.character) {
                 case 'b':
@@ -144,23 +134,5 @@ public class EvalModel {
         if (p == 5) return pPosition[pos[0]][pos[1]];
         if (p == 6) return zPosition[pos[0]][pos[1]];
         return -1;
-    }
-
-    private int evalPieceControl() {
-        return 0;
-    }
-
-    private int evalPieceFlexible(int p) {
-        // b | s | x | m | j | p | z
-        int[] pieceFlexible = new int[]{0, 1, 1, 13, 7, 7, 15};
-        return 0;
-    }
-// đánh giá
-    private int evalPieceProtect() {
-        return 0;
-    }
-// đặc tính, nổi bật
-    private int evalPieceFeature() {
-        return 0;
     }
 }

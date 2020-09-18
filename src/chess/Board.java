@@ -2,18 +2,11 @@ package chess;
 
 import java.util.Map;
 
-/**
- * Created by Tong on 12.03.
- * Chess > Board entity
- */
-
-
 public class Board{
     public final int BOARD_WIDTH = 9, BOARD_HEIGHT = 10;
     public Map<String, Piece> pieces;
     public char player = 'r';
     private Piece[][] cells = new Piece[BOARD_HEIGHT][BOARD_WIDTH];
-// kiểm tra xem nó trong bàn cờ không
     public boolean isInside(int[] position) {
         return isInside(position[0], position[1]);
     }
@@ -22,7 +15,6 @@ public class Board{
         return !(x < 0 || x >= BOARD_HEIGHT
                 || y < 0 || y >= BOARD_WIDTH);
     }
-// xem bị trí đó có quân cờ nào chưa
     public boolean isEmpty(int[] position) {
         return isEmpty(position[0], position[1]);
     }
@@ -31,7 +23,6 @@ public class Board{
         return isInside(x, y) && cells[x][y] == null;
     }
 
-// cập nhập vị trí và quân gì đã đến
     public boolean update(Piece piece) {
         int[] pos = piece.position;
         cells[pos[0]][pos[1]] = piece;
@@ -52,7 +43,7 @@ public class Board{
         player = (player == 'r') ? 'b' : 'r';
         return inNewPos;
     }
-// quân đen
+    
     public boolean backPiece(String key) {
         int[] origPos = pieces.get(key).position;
         cells[origPos[0]][origPos[1]] = pieces.get(key);

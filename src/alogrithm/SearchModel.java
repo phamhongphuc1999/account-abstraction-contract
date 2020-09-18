@@ -8,10 +8,6 @@ import control.GameController;
 import java.util.ArrayList;
 import java.util.Map;
 
-/**
- * Created by Tong on 12.08.
- * Alpha beta search.
- */
 public class SearchModel {
     private static int DEPTH = 2;
     private Board board;
@@ -34,10 +30,8 @@ public class SearchModel {
             /* Move*/
             Piece eaten = board.updatePiece(n.piece, n.to);
             n.value = alphaBeta(DEPTH, Integer.MIN_VALUE, Integer.MAX_VALUE, false);
-            /* Select a best move during searching to save time*/
             if (best == null || n.value >= best.value)
                 best = n;
-            /* Back move*/
             board.updatePiece(n.piece, n.from);
             if (eaten != null) {
                 board.pieces.put(eaten.key, eaten);
@@ -51,7 +45,6 @@ public class SearchModel {
 
 
     private int alphaBeta(int depth, int alpha, int beta, boolean isMax) {
-        /* Return evaluation if reaching leaf node or any side won.*/
         if (depth == 0 || controller.hasWin(board) != 'x')
             return new EvalModel().eval(board, 'b');
         ArrayList<AlphaBetaNode> moves = generateMovesForAll(isMax);
@@ -59,12 +52,10 @@ public class SearchModel {
         synchronized (this) {
             for (final AlphaBetaNode n : moves) {
                 Piece eaten = board.updatePiece(n.piece, n.to);
-            /* Is maximizing player? */
                 final int finalBeta = beta;
                 final int finalAlpha = alpha;
                 final int finalDepth = depth;
                 final int[] temp = new int[1];
-                /* Only adopt multi threading strategy in depth 2. To avoid conjunction.*/
                 if (depth == 2) {
                     if (isMax) {
                         new Thread(new Runnable() {
@@ -93,7 +84,6 @@ public class SearchModel {
                     board.pieces.put(eaten.key, eaten);
                     board.backPiece(eaten.key);
                 }
-            /* Cut-off */
                 if (beta <= alpha) break;
             }
         }

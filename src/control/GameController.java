@@ -9,10 +9,6 @@ import view.GameView;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by Tong on 12.04.
- * GameController, dealing with logic along game process.
- */
 public class GameController {
 
     private Map<String, Piece> initPieces() {
@@ -71,17 +67,11 @@ public class GameController {
 
 
     public void moveChess(String key, int[] position, Board board) {
-        /**
-         * Implements user's action.
-         * */
         board.updatePiece(key, position);
     }
 
 
     public void responseMoveChess(Board board, GameView view) {
-        /**
-         * Implements artificial intelligence.
-         * */
         SearchModel searchModel = new SearchModel();
         AlphaBetaNode result = searchModel.search(board);
 
@@ -91,11 +81,6 @@ public class GameController {
 
 
     public void printBoard(Board board) {
-        /**
-         * Piece position is stored internally as [row, col], but output standard requires [col,row].
-         * Here comes the conversion.
-         * eg. [0, 4] --> [E, 0]
-         * */
         Map<String, Piece> pieces = board.pieces;
         for (Map.Entry<String, Piece> stringPieceEntry : pieces.entrySet()) {
             Piece piece = stringPieceEntry.getValue();
@@ -106,10 +91,6 @@ public class GameController {
     }
 
     public char hasWin(Board board) {
-        /**
-         * Judge has the game ended.
-         * @return 'r' for RED wins, 'b' for BLACK wins, 'x' for game continues.
-         * */
         boolean isRedWin = board.pieces.get("bb0") == null;
         boolean isBlackWin = board.pieces.get("rb0") == null;
         if (isRedWin) return 'r';

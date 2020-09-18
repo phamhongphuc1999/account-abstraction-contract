@@ -2,10 +2,6 @@ package chess;
 
 import java.util.ArrayList;
 
-/**
- * Created by Tong on 12.15.
- * Define moving rules of pieces in the board.
- */
 public class Rules {
 
     private static int[] pos;
@@ -15,7 +11,7 @@ public class Rules {
     public static ArrayList<int[]> getNextMove(String piece, int[] pos, Board board) {
         Rules.pos = pos;
         Rules.board = board;
-        Rules.player = piece.charAt(0);// xem quân gì đi
+        Rules.player = piece.charAt(0);
         switch (piece.charAt(1)) {
             case 'j'://xe
                 return jRules();

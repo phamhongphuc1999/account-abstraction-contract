@@ -12,10 +12,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by Tong on 12.10.
- * Dealing with graphics logic in the chess game. Render with j2d.
- */
 public class GameView {
     private static final int VIEW_WIDTH = 700, VIEW_HEIGHT = 712;
     private static final int PIECE_WIDTH = 67, PIECE_HEIGHT = 67;
