@@ -13,19 +13,19 @@ public class Rules {
         Rules.board = board;
         Rules.player = piece.charAt(0);
         switch (piece.charAt(1)) {
-            case 'j'://xe
+            case 'r'://xe
                 return jRules();
-            case 'm'://mã
+            case 'h'://mã
                 return mRules();
-            case 'p'://pháo
+            case 'c'://pháo
                 return pRules();
-            case 'x'://tượng
+            case 'e'://tượng
                 return xRules();
-            case 's'://sĩ
+            case 'a'://sĩ
                 return sRules();
-            case 'b'://tướng
+            case 'g'://tướng
                 return bRules();
-            case 'z'://tốt
+            case 'p'://tốt
                 return zRules();
             default:
                 return null;
@@ -132,7 +132,8 @@ public class Rules {
         }
         for (int offset : xOffsets) {
             int[] dMove = new int[]{pos[0] + offset, pos[1]};
-            if (!board.isInside(dMove)) break;
+            if (!board.isInside(dMove))
+                break;
             boolean e = board.isEmpty(dMove);
             if (!dd) {
                 if (e) moves.add(dMove);
@@ -187,7 +188,7 @@ public class Rules {
         }
         /* opposite 'b' */
         boolean flag = true;
-        int[] oppoBoss = (player == 'r') ? board.pieces.get("bb0").position : board.pieces.get("rb0").position;
+        int[] oppoBoss = (player == 'r') ? board.pieces.get("bg0").position : board.pieces.get("rg0").position;
         if (oppoBoss[1] == pos[1]) {
             for (int i = Math.min(oppoBoss[0], pos[0]) + 1; i < Math.max(oppoBoss[0], pos[0]); i++) {
                 if (board.getPiece(i, pos[1]) != null) {

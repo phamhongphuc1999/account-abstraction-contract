@@ -13,19 +13,19 @@ public class EvalModel {
             Piece piece = stringPieceEntry.getValue();
             int[] reversePosition = new int[]{board.BOARD_HEIGHT - 1 - piece.position[0], piece.position[1]};
             switch (piece.character) {
-                case 'b':
+                case 'g':
                     if (piece.color == 'r') values[0][0] += evalPieceValue(0);
                     else values[1][0] += evalPieceValue(0);
                     break;
-                case 's':
+                case 'a':
                     if (piece.color == 'r') values[0][0] += evalPieceValue(1);
                     else values[1][0] += evalPieceValue(1);
                     break;
-                case 'x':
+                case 'e':
                     if (piece.color == 'r') values[0][0] += evalPieceValue(2);
                     else values[1][0] += evalPieceValue(2);
                     break;
-                case 'm':
+                case 'h':
                     if (piece.color == 'r') {
                         values[0][0] += evalPieceValue(3);
                         values[0][1] += evalPiecePosition(3, piece.position);
@@ -34,7 +34,7 @@ public class EvalModel {
                         values[1][1] += evalPiecePosition(3, reversePosition);
                     }
                     break;
-                case 'j':
+                case 'r':
                     if (piece.color == 'r') {
                         values[0][0] += evalPieceValue(4);
                         values[0][1] += evalPiecePosition(4, piece.position);
@@ -43,7 +43,7 @@ public class EvalModel {
                         values[1][1] += evalPiecePosition(4, reversePosition);
                     }
                     break;
-                case 'p':
+                case 'c':
                     if (piece.color == 'r') {
                         values[0][0] += evalPieceValue(5);
                         values[0][1] += evalPiecePosition(5, piece.position);
@@ -52,7 +52,7 @@ public class EvalModel {
                         values[1][1] += evalPiecePosition(5, reversePosition);
                     }
                     break;
-                case 'z':
+                case 'p':
                     if (piece.color == 'r') {
                         values[0][0] += evalPieceValue(6);
                         values[0][1] += evalPiecePosition(6, piece.position);
@@ -75,13 +75,13 @@ public class EvalModel {
     }
 
     private int evalPieceValue(int p) {
-        /* b | s | x | m | j | p | z*/
+        /* g | a | e | h | r | c | p*/
         int[] pieceValue = new int[]{1000000, 110, 110, 300, 600, 300, 70};
         return pieceValue[p];
     }
 
     private int evalPiecePosition(int p, int[] pos) {
-        int[][] pPosition = new int[][]{
+        int[][] cPosition = new int[][]{
                 {6, 4, 0, -10, -12, -10, 0, 4, 6},
                 {2, 2, 0, -4, -14, -4, 0, 2, 2},
                 {2, 2, 0, -10, -8, -10, 0, 2, 2},
@@ -93,7 +93,7 @@ public class EvalModel {
                 {0, 2, 4, 6, 6, 6, 4, 2, 0},
                 {0, 0, 2, 6, 6, 6, 2, 0, 0}
         };
-        int[][] mPosition = new int[][]{
+        int[][] hPosition = new int[][]{
                 {4, 8, 16, 12, 4, 12, 16, 8, 4},
                 {4, 10, 28, 16, 8, 16, 28, 10, 4},
                 {12, 14, 16, 20, 18, 20, 16, 14, 12},
@@ -105,7 +105,7 @@ public class EvalModel {
                 {0, 2, 4, 4, -2, 4, 4, 2, 0},
                 {0, -4, 0, 0, 0, 0, 0, -4, 0}
         };
-        int[][] jPosition = new int[][]{
+        int[][] rPosition = new int[][]{
                 {14, 14, 12, 18, 16, 18, 12, 14, 14},
                 {16, 20, 18, 24, 26, 24, 18, 20, 16},
                 {12, 12, 12, 18, 18, 18, 12, 12, 12},
@@ -117,7 +117,7 @@ public class EvalModel {
                 {8, 4, 8, 16, 8, 16, 8, 4, 8},
                 {-2, 10, 6, 14, 12, 14, 6, 10, -2}
         };
-        int[][] zPosition = new int[][]{
+        int[][] pPosition = new int[][]{
                 {0, 3, 6, 9, 12, 9, 6, 3, 0},
                 {18, 36, 56, 80, 120, 80, 56, 36, 18},
                 {14, 26, 42, 60, 80, 60, 42, 26, 14},
@@ -129,10 +129,10 @@ public class EvalModel {
                 {0, 0, 0, 0, 0, 0, 0, 0, 0},
                 {0, 0, 0, 0, 0, 0, 0, 0, 0}
         };
-        if (p == 3) return mPosition[pos[0]][pos[1]];
-        if (p == 4) return jPosition[pos[0]][pos[1]];
-        if (p == 5) return pPosition[pos[0]][pos[1]];
-        if (p == 6) return zPosition[pos[0]][pos[1]];
+        if (p == 3) return hPosition[pos[0]][pos[1]];
+        if (p == 4) return rPosition[pos[0]][pos[1]];
+        if (p == 5) return cPosition[pos[0]][pos[1]];
+        if (p == 6) return pPosition[pos[0]][pos[1]];
         return -1;
     }
 }
