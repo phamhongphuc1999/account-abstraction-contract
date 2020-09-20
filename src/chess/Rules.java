@@ -13,19 +13,19 @@ public class Rules {
         Rules.board = board;
         Rules.player = piece.charAt(0);
         switch (piece.charAt(1)) {
-            case 'j'://xe
+            case 'r'://xe
                 return jRules();
-            case 'm'://mã
+            case 'h'://mã
                 return mRules();
-            case 'p'://pháo
+            case 'c'://pháo
                 return pRules();
-            case 'x'://tượng
+            case 'e'://tượng
                 return xRules();
-            case 's'://sĩ
+            case 'a'://sĩ
                 return sRules();
-            case 'b'://tướng
+            case 'g'://tướng
                 return bRules();
-            case 'z'://tốt
+            case 'p'://tốt
                 return zRules();
             default:
                 return null;
@@ -132,7 +132,8 @@ public class Rules {
         }
         for (int offset : xOffsets) {
             int[] dMove = new int[]{pos[0] + offset, pos[1]};
-            if (!board.isInside(dMove)) break;
+            if (!board.isInside(dMove))
+                break;
             boolean e = board.isEmpty(dMove);
             if (!dd) {
                 if (e) moves.add(dMove);
