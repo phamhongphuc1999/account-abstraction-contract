@@ -1,13 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:fix" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:fix" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="a222886e-9aa1-4a76-a1ed-df747367b4ec" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/Config.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/chess/Rules.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/chess/Rules.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/control/GameController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/control/GameController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Config.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/alogrithm/EvalModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/alogrithm/EvalModel.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -106,5 +132,34 @@
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="WindowStateProjectService">
+    <state width="1175" height="176" key="GridCell.Tab.0.bottom" timestamp="1600571161346">
+      <screen x="62" y="0" width="1218" height="720" />
+    </state>
+    <state width="1175" height="176" key="GridCell.Tab.0.bottom/62.0.1218.720@62.0.1218.720" timestamp="1600571161346" />
+    <state width="1175" height="176" key="GridCell.Tab.0.center" timestamp="1600571161346">
+      <screen x="62" y="0" width="1218" height="720" />
+    </state>
+    <state width="1175" height="176" key="GridCell.Tab.0.center/62.0.1218.720@62.0.1218.720" timestamp="1600571161346" />
+    <state width="1175" height="176" key="GridCell.Tab.0.left" timestamp="1600571161346">
+      <screen x="62" y="0" width="1218" height="720" />
+    </state>
+    <state width="1175" height="176" key="GridCell.Tab.0.left/62.0.1218.720@62.0.1218.720" timestamp="1600571161346" />
+    <state width="1175" height="176" key="GridCell.Tab.0.right" timestamp="1600571161346">
+      <screen x="62" y="0" width="1218" height="720" />
+    </state>
+    <state width="1175" height="176" key="GridCell.Tab.0.right/62.0.1218.720@62.0.1218.720" timestamp="1600571161346" />
   </component>
 </project>

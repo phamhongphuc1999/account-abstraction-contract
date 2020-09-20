@@ -40,7 +40,7 @@ public class GameController {
         pieces.put("rh1", new Piece("rh1", new int[]{9, 7}));
         pieces.put("rr1", new Piece("rr1", new int[]{9, 8}));
         pieces.put("rc0", new Piece("rc0", new int[]{7, 1}));
-        pieces.put("rp1", new Piece("rc1", new int[]{7, 7}));
+        pieces.put("rc1", new Piece("rc1", new int[]{7, 7}));
         pieces.put("rp0", new Piece("rp0", new int[]{6, 0}));
         pieces.put("rp1", new Piece("rp1", new int[]{6, 2}));
         pieces.put("rp2", new Piece("rp2", new int[]{6, 4}));
@@ -58,9 +58,6 @@ public class GameController {
 
 
     public Board playChess() {
-        /**
-         * Start game.
-         * */
         initPieces();
         return initBoard();
     }
@@ -86,13 +83,12 @@ public class GameController {
             Piece piece = stringPieceEntry.getValue();
             System.out.println(stringPieceEntry.getKey() + ":" + (char) (piece.position[1] + 'A') + piece.position[0]);
         }
-
         System.out.println();
     }
 
     public char hasWin(Board board) {
-        boolean isRedWin = board.pieces.get("bb0") == null;
-        boolean isBlackWin = board.pieces.get("rb0") == null;
+        boolean isRedWin = board.pieces.get("bg0") == null;
+        boolean isBlackWin = board.pieces.get("rg0") == null;
         if (isRedWin) return 'r';
         else if (isBlackWin) return 'b';
         else return 'x';

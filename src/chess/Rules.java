@@ -188,7 +188,7 @@ public class Rules {
         }
         /* opposite 'b' */
         boolean flag = true;
-        int[] oppoBoss = (player == 'r') ? board.pieces.get("bb0").position : board.pieces.get("rb0").position;
+        int[] oppoBoss = (player == 'r') ? board.pieces.get("bg0").position : board.pieces.get("rg0").position;
         if (oppoBoss[1] == pos[1]) {
             for (int i = Math.min(oppoBoss[0], pos[0]) + 1; i < Math.max(oppoBoss[0], pos[0]); i++) {
                 if (board.getPiece(i, pos[1]) != null) {
