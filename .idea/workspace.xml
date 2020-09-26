@@ -8,32 +8,31 @@
       </path>
       <path>
         <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="GROUP_NODE:fix" type="e8cecc67:BranchNodeDescriptor" />
-      </path>
-      <path>
-        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
         <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
       </path>
       <path>
         <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
         <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
         <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
-      </path>
-      <path>
-        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="GROUP_NODE:fix" type="e8cecc67:BranchNodeDescriptor" />
       </path>
     </expand>
     <select />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a222886e-9aa1-4a76-a1ed-df747367b4ec" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Config.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/alogrithm/EvalModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/alogrithm/EvalModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/ChessGame.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/alogrithm/AlphaBetaNode.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/alogrithm/EvalModel.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/alogrithm/SearchModel$1.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/alogrithm/SearchModel$2.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/alogrithm/SearchModel.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/chess/Board.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/chess/Piece.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/chess/Rules.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/control/GameController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/view/GameView$BoardClickListener.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/view/GameView$PieceOnClickListener.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/view/GameView.class" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -143,23 +142,24 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="WindowStateProjectService">
-    <state width="1175" height="176" key="GridCell.Tab.0.bottom" timestamp="1600571161346">
+    <state width="1175" height="169" key="GridCell.Tab.0.bottom" timestamp="1601118387395">
       <screen x="62" y="0" width="1218" height="720" />
     </state>
-    <state width="1175" height="176" key="GridCell.Tab.0.bottom/62.0.1218.720@62.0.1218.720" timestamp="1600571161346" />
-    <state width="1175" height="176" key="GridCell.Tab.0.center" timestamp="1600571161346">
+    <state width="1175" height="169" key="GridCell.Tab.0.bottom/62.0.1218.720@62.0.1218.720" timestamp="1601118387395" />
+    <state width="1175" height="169" key="GridCell.Tab.0.center" timestamp="1601118387395">
       <screen x="62" y="0" width="1218" height="720" />
     </state>
-    <state width="1175" height="176" key="GridCell.Tab.0.center/62.0.1218.720@62.0.1218.720" timestamp="1600571161346" />
-    <state width="1175" height="176" key="GridCell.Tab.0.left" timestamp="1600571161346">
+    <state width="1175" height="169" key="GridCell.Tab.0.center/62.0.1218.720@62.0.1218.720" timestamp="1601118387395" />
+    <state width="1175" height="169" key="GridCell.Tab.0.left" timestamp="1601118387394">
       <screen x="62" y="0" width="1218" height="720" />
     </state>
-    <state width="1175" height="176" key="GridCell.Tab.0.left/62.0.1218.720@62.0.1218.720" timestamp="1600571161346" />
-    <state width="1175" height="176" key="GridCell.Tab.0.right" timestamp="1600571161346">
+    <state width="1175" height="169" key="GridCell.Tab.0.left/62.0.1218.720@62.0.1218.720" timestamp="1601118387394" />
+    <state width="1175" height="169" key="GridCell.Tab.0.right" timestamp="1601118387395">
       <screen x="62" y="0" width="1218" height="720" />
     </state>
-    <state width="1175" height="176" key="GridCell.Tab.0.right/62.0.1218.720@62.0.1218.720" timestamp="1600571161346" />
+    <state width="1175" height="169" key="GridCell.Tab.0.right/62.0.1218.720@62.0.1218.720" timestamp="1601118387395" />
   </component>
 </project>
