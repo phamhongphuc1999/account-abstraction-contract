@@ -233,7 +233,6 @@ public class Rules {
                 }
             }
         }
-
         return moves;
     }
 }

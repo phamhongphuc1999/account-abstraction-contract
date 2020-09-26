@@ -56,17 +56,14 @@ public class GameController {
         return board;
     }
 
-
     public Board playChess() {
         initPieces();
         return initBoard();
     }
 
-
     public void moveChess(String key, int[] position, Board board) {
         board.updatePiece(key, position);
     }
-
 
     public void responseMoveChess(Board board, GameView view) {
         SearchModel searchModel = new SearchModel();
@@ -75,7 +72,6 @@ public class GameController {
         view.movePieceFromAI(result.piece, result.to);
         board.updatePiece(result.piece, result.to);
     }
-
 
     public void printBoard(Board board) {
         Map<String, Piece> pieces = board.pieces;
@@ -93,5 +89,4 @@ public class GameController {
         else if (isBlackWin) return 'b';
         else return 'x';
     }
-
 }

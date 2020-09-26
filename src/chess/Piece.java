@@ -14,5 +14,4 @@ public class Piece implements Cloneable {
         this.index = name.charAt(2);
         this.position = position;
     }
-
 }

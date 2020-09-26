@@ -20,19 +20,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a222886e-9aa1-4a76-a1ed-df747367b4ec" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/ChessGame.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/alogrithm/AlphaBetaNode.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/alogrithm/EvalModel.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/alogrithm/SearchModel$1.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/alogrithm/SearchModel$2.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/alogrithm/SearchModel.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/chess/Board.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/chess/Piece.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/chess/Rules.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/control/GameController.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/view/GameView$BoardClickListener.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/view/GameView$PieceOnClickListener.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/IntelligentChineseChessSystem/view/GameView.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/alogrithm/SearchModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/alogrithm/SearchModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/chess/Piece.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/chess/Piece.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/chess/Rules.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/chess/Rules.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/control/GameController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/control/GameController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/view/GameView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/view/GameView.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
