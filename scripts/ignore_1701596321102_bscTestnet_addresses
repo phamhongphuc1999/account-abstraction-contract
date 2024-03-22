@@ -1,0 +1,6 @@
+{
+  "accountFactoryAddress": "0x19385cB2E932E2fd40c39c21e7de5a49f53058fF",
+  "paymasterAddress": "0xEC695d0628e52848C4a3231E5719dFbd29983Bd7",
+  "oracleAddress": "0x13CB4545Ed4a81abDf86b4a05aE597Fa05D7851d",
+  "tokenAddress": "0x12f44af74544D9649190F5bfCD3710d7b2996C4D"
+}
