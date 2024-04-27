@@ -140,3 +140,14 @@ yarn-error.log
 typechain
 
 ignore_*
+
+# Circom
+circom/*_js/
+circom/**/*.r1cs
+circom/**/*.sym
+circom/**/*.ptau
+circom/**/*.zkey
+circom/**/*.wtns
+circom/*.json
+circom/*.sol
+circom/circom/

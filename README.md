@@ -1,27 +1,87 @@
-## ChainGuard - A Secure and Flexible Wallet for Self-Sovereign Identity and Digital Assets Using Account Abstraction
+### Account Abstraction
 
-Smart contract implementation of Account Abstraction.
+My Account abstraction is strongly influenced by [eth-infinitism](https://github.com/eth-infinitism/account-abstraction/tree/develop)
 
-**Contracts list**
+### Usage
 
-- `BaseAccount.sol`: Basic account implementation. This contract provides the basic logic for implementing the IAccount interface - validateUserOp. Specific account implementation should inherit it and provide the account-specific logic
-- `BasePaymaster.sol`: Helper class for creating a paymaster. Provides helper methods for staking. Validates that the postOp is called only by the entryPoint
-- `Account.sol`: This is sample minimal account, has execute, eth handling methods, has a single signer that can send requests through the entryPoint.
-- `DepositPaymaster.sol`: A token-based paymaster that accepts token deposits. The deposit is only a safeguard: the user pays with his token balance.
-- `AccountFactory`: A simple factory contract for `Account.sol`. A UserOperations "initCode" holds the address of the factory, and a method call (to createAccount, in this sample factory).
-
-### Run
-
-- Install packages
+- To install dependencies
 
 ```shell
-npm install
+yarn install
 ```
 
-- Compile contracts
+- Create your environment
 
 ```shell
-npm run compile
+cp .env_example .env
 ```
 
-- Please note that you should use node>=20.
+- To compile contracts
+
+```shell
+yarn rmCompile
+```
+
+- to test
+
+```shell
+yarn test
+```
+
+## Circom usage
+
+I use docker for configing and running circom. If you cause segment fault error on build docker's process, you should change node version, v21.7.3 fit for me.
+
+- Start docker
+
+```shell
+docker compose up -d
+```
+
+- Exe to docker container
+
+```shell
+docker exec -it aa-contract /bin/bash
+```
+
+- Setup
+
+```shell
+cd workspaces/circom
+chmod +x ./shells/setup.sh
+source ./shells/setup.sh
+```
+
+- Try to compile and generate proof, you can follow command line written in `Makefile`.
+
+#### Step 1: compile circom
+
+```shell
+make compile name=circom-file-name
+```
+
+#### Step 2: compute witness
+
+```shell
+make witness name=circom-file-name
+```
+
+#### Step 3: provide power
+
+```shell
+make power power=power name=circom-file-name
+```
+
+You can select enough power by this [link](https://github.com/iden3/snarkjs)
+
+#### Step 4: generate proof
+
+```shell
+make proof name=circom-file-name
+```
+
+#### Step 5: try to verify your proof
+
+```shell
+make verify
+```
