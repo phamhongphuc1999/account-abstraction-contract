@@ -14,20 +14,18 @@ import {
 } from '../typechain';
 import { UserOperation } from './types';
 import {
-  encodeUserOp,
-  fillUserOpDefaults,
-  getUserOpHash,
-  packUserOp,
-  signUserOp,
-} from './user-ops';
-import {
   HashZero,
   ONE_ETH,
   createAccount,
   createAccountOwner,
   createAddress,
+  encodeUserOp,
+  fillUserOpDefaults,
   getBalance,
+  getUserOpHash,
   isDeployed,
+  packUserOp,
+  signUserOp,
 } from './utils';
 
 describe('Account', function () {
@@ -171,10 +169,8 @@ describe('Account', function () {
         chainId
       );
 
-      userOpHash = await getUserOpHash(userOp, entryPointEoa, chainId);
-
+      userOpHash = getUserOpHash(userOp, entryPointEoa, chainId);
       expectedPay = actualGasPrice * (callGasLimit + verificationGasLimit);
-
       preBalance = await getBalance(account.address);
       const packedOp = packUserOp(userOp);
       const ret = await account.validateUserOp(packedOp, userOpHash, expectedPay, {
@@ -187,7 +183,6 @@ describe('Account', function () {
       const postBalance = await getBalance(account.address);
       expect(preBalance - postBalance).to.eql(expectedPay);
     });
-
     it('should return NO_SIG_VALIDATION on wrong signature', async () => {
       const userOpHash = HashZero;
       const packedOp = packUserOp(userOp);

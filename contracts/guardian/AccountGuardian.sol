@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.23;
 
+import '../Account.sol';
+import '../AccountFactory.sol';
 import './Verifier.sol';
 import '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 import '@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol';
@@ -8,6 +10,8 @@ import '../interfaces/ISignatureValidator.sol';
 
 contract AccountGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureValidatorConstants {
   address public owner;
+  Account public account;
+  AccountFactory private accountFactory;
   uint256 public threshold;
   uint256 public guardianCount;
   uint256 private delay;
@@ -56,15 +60,23 @@ contract AccountGuardian is Verifier, Initializable, UUPSUpgradeable, ISignature
   }
 
   function _onlyOwner() internal view {
-    //directly from EOA owner, or through the account itself (which gets redirected through execute())
-    require(msg.sender == owner || msg.sender == address(this), 'only owner');
+    require(
+      msg.sender == owner || msg.sender == address(account) || msg.sender == address(this),
+      'only owner'
+    );
   }
 
-  function initialize(address _owner) public initializer {
-    owner = _owner;
+  function initialize(Account _account, AccountFactory _accountFactory) public initializer {
+    account = _account;
+    owner = _account.owner();
+    accountFactory = _accountFactory;
   }
 
-  function setupGuardians(address[] memory _guardians, uint256 _threshold) public onlyOwner {
+  function setupGuardians(
+    address[] memory _guardians,
+    uint256 _threshold,
+    uint256 _expirePeriod
+  ) public onlyOwner {
     require(threshold == 0, 'threshold must be equals 0 when initialize.');
     require(
       _guardians.length >= _threshold,
@@ -79,10 +91,11 @@ contract AccountGuardian is Verifier, Initializable, UUPSUpgradeable, ISignature
     }
     guardianCount = _guardians.length;
     threshold = _threshold;
+    expirePeriod = _expirePeriod;
     emit ThresholdChanged(_threshold);
   }
 
-  function setThreshold(uint256 _threshold) internal {
+  function setThreshold(uint256 _threshold) external {
     require(threshold > 0, "threshold haven't been setup yet.");
     require(
       _threshold > 0 && _threshold <= guardianCount,
@@ -92,7 +105,7 @@ contract AccountGuardian is Verifier, Initializable, UUPSUpgradeable, ISignature
     emit ThresholdChanged(_threshold);
   }
 
-  function addGuardian(address _guardian) internal {
+  function addGuardian(address _guardian) external {
     require(threshold > 0, "threshold haven't been setup yet.");
     require(_guardian != address(0) && _guardian != address(this), 'invalid guardian address.');
     require(!guardians[_guardian], 'guardian already existed.');
@@ -101,7 +114,7 @@ contract AccountGuardian is Verifier, Initializable, UUPSUpgradeable, ISignature
     emit GuardianAdded(_guardian);
   }
 
-  function removeGuardian(address _guardian) internal {
+  function removeGuardian(address _guardian) external {
     require(threshold > 0, "threshold haven't been setup yet.");
     require(_guardian != address(0) && _guardian != address(this), 'invalid guardian address.');
     require(guardians[_guardian], 'guardian not existed.');
@@ -177,6 +190,36 @@ contract AccountGuardian is Verifier, Initializable, UUPSUpgradeable, ISignature
     return signatureCount >= requiredSignatures;
   }
 
+  function checkMultisig(
+    bytes32 dataHash,
+    bytes memory data,
+    bytes memory signatures
+  ) public view returns (bool) {
+    uint256 _threshold = threshold;
+    require(_threshold > 0, 'GuardianManager::checkMultisig: invalid threshold');
+    return checkSignatures(dataHash, data, signatures, threshold);
+  }
+
+  /**
+   * change the owner of the current account that this guardian is managing
+   * @param dataHash the preimage hash of the calldata
+   * @param _newOwner the address of new owner
+   * @param signatures the signature of the guardians over data
+   */
+  function changeOwner(
+    bytes32 dataHash,
+    bytes memory _newOwner,
+    bytes memory signatures
+  ) public payable onlyGuardian {
+    require(
+      checkMultisig(dataHash, _newOwner, signatures),
+      'GuardianManager::changeOwner: invalid multi sig'
+    );
+    address __newOwner = address(uint160(bytes20(_newOwner)));
+    account.changeOwner(accountFactory, _newOwner);
+    owner = __newOwner;
+  }
+
   function signatureSplit(
     bytes memory signatures,
     uint256 pos
@@ -195,27 +238,25 @@ contract AccountGuardian is Verifier, Initializable, UUPSUpgradeable, ISignature
   }
 
   function queue(
-    address _target,
     uint256 _value,
     string calldata _signature,
     bytes calldata _data,
     uint256 _eta
   ) external onlyOwner returns (bytes32) {
     require(_eta >= block.timestamp + delay, 'Estimated execution block must satisfy delay.');
-    bytes32 txHash = keccak256(abi.encode(_target, _value, _signature, _data, _eta));
+    bytes32 txHash = keccak256(abi.encode(address(this), _value, _signature, _data, _eta));
     transactionQueue[txHash] = true;
-    emit TransactionQueued(txHash, _target, _value, _signature, _data, _eta);
+    emit TransactionQueued(txHash, address(this), _value, _signature, _data, _eta);
     return txHash;
   }
 
-  function guardianExecute(
-    address _target,
+  function execute(
     uint256 _value,
     string calldata _signature,
     bytes calldata _data,
     uint256 _eta
   ) external payable onlyOwner {
-    bytes32 txHash = keccak256(abi.encode(_target, _value, _signature, _data, _eta));
+    bytes32 txHash = keccak256(abi.encode(address(this), _value, _signature, _data, _eta));
     require(transactionQueue[txHash], "Transaction hasn't been queued.");
     require(block.timestamp >= _eta, "Transaction hasn't surpassed time lock.");
     require(block.timestamp <= (_eta + expirePeriod), 'Transaction is expired.');
@@ -228,21 +269,20 @@ contract AccountGuardian is Verifier, Initializable, UUPSUpgradeable, ISignature
       callData = abi.encodePacked(bytes4(keccak256(bytes(_signature))), _data);
     }
 
-    (bool success, ) = _target.call{value: _value}(callData);
+    (bool success, ) = address(this).call{value: _value}(callData);
     require(success, 'Transaction execution reverted.');
-    emit TransactionExecuted(txHash, _target, _value, _signature, _data, _eta);
+    emit TransactionExecuted(txHash, address(this), _value, _signature, _data, _eta);
   }
 
   function cancel(
-    address _target,
     uint256 _value,
     string calldata _signature,
     bytes calldata _data,
     uint256 _eta
   ) external onlyOwner {
-    bytes32 txHash = keccak256(abi.encode(_target, _value, _signature, _data, _eta));
+    bytes32 txHash = keccak256(abi.encode(address(this), _value, _signature, _data, _eta));
     transactionQueue[txHash] = false;
-    emit TransactionCancelled(txHash, _target, _value, _signature, _data, _eta);
+    emit TransactionCancelled(txHash, address(this), _value, _signature, _data, _eta);
   }
 
   function _authorizeUpgrade(address newImplementation) internal virtual override {

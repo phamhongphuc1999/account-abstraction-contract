@@ -8,13 +8,18 @@ import '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 import '@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import '@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol';
+import './AccountFactory.sol';
+import './guardian/AccountGuardian.sol';
 
 contract Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initializable {
   address public owner;
+  address public accountGuardian;
 
   IEntryPoint private immutable _entryPoint;
 
-  event SimpleAccountInitialized(IEntryPoint indexed entryPoint, address indexed owner);
+  event AccountInitialized(IEntryPoint indexed entryPoint, address indexed owner);
+  event GuardianInitialized(address indexed guardian);
+  event OwnerChanged(address indexed newOwner);
 
   modifier onlyOwner() {
     _onlyOwner();
@@ -37,6 +42,16 @@ contract Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initiali
   function _onlyOwner() internal view {
     //directly from EOA owner, or through the account itself (which gets redirected through execute())
     require(msg.sender == owner || msg.sender == address(this), 'only owner');
+  }
+
+  modifier onlyAccountGuardian() {
+    _onlyAccountGuardian();
+    _;
+  }
+
+  function _onlyAccountGuardian() internal view {
+    require(accountGuardian != address(0), 'Account::_onlyAccountGuardian: guardian not setup yet');
+    require(msg.sender == accountGuardian, 'Account::_onlyAccountGuardian: only guardian manager');
   }
 
   /**
@@ -80,7 +95,7 @@ contract Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initiali
 
   /**
    * @dev The _entryPoint member is immutable, to reduce gas consumption.  To upgrade EntryPoint,
-   * a new implementation of SimpleAccount must be deployed with the new EntryPoint address, then upgrading
+   * a new implementation of Account must be deployed with the new EntryPoint address, then upgrading
    * the implementation by calling `upgradeTo()`
    * @param anOwner the owner (signer) of this account
    */
@@ -90,7 +105,7 @@ contract Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initiali
 
   function _initialize(address anOwner) internal virtual {
     owner = anOwner;
-    emit SimpleAccountInitialized(_entryPoint, owner);
+    emit AccountInitialized(_entryPoint, owner);
   }
 
   // Require the function call went through EntryPoint or owner
@@ -99,6 +114,16 @@ contract Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initiali
       msg.sender == address(entryPoint()) || msg.sender == owner,
       'account: not Owner or EntryPoint'
     );
+  }
+
+  // function setUpGuardian(address _accountGuardian) public onlyOwner {
+  function setUpGuardian(address _accountGuardian) public {
+    require(
+      accountGuardian == address(0),
+      'Account::setupGuardian: accountGuardian has been setup'
+    );
+    accountGuardian = _accountGuardian;
+    emit GuardianInitialized(_accountGuardian);
   }
 
   /// implement template method of BaseAccount
@@ -146,5 +171,77 @@ contract Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initiali
   function _authorizeUpgrade(address newImplementation) internal view override {
     (newImplementation);
     _onlyOwner();
+  }
+
+  function changeOwner(
+    AccountFactory _accountFactory,
+    bytes memory _newOwner
+  ) public onlyAccountGuardian {
+    address __newOwner = address(uint160(bytes20(_newOwner)));
+    require(
+      __newOwner != owner && __newOwner != address(0),
+      'Account::changeOwner: invalid newOwner'
+    );
+    owner = __newOwner;
+    _accountFactory.changeOwner(this, _newOwner);
+    emit OwnerChanged(__newOwner);
+  }
+
+  function deployGuardian(bytes32 _salt, AccountFactory _accountFactory) public {
+    AccountGuardian manager = (new AccountGuardian){salt: _salt}();
+    manager.initialize(this, _accountFactory);
+    setUpGuardian(address(manager));
+  }
+
+  function deploy(bytes memory bytecode, uint _salt) external onlyOwner {
+    address addr;
+    assembly {
+      addr := create2(0, add(bytecode, 0x20), mload(bytecode), _salt)
+      if iszero(extcodesize(addr)) {
+        revert(0, 0)
+      }
+    }
+  }
+
+  function computeAddress(bytes memory bytecode, bytes32 salt) external view returns (address) {
+    bytes32 bytecodeHash = keccak256(bytecode);
+    bytes32 _data = keccak256(abi.encodePacked(bytes1(0xff), address(this), salt, bytecodeHash));
+    return address(bytes20(_data << 96));
+  }
+
+  function isDeploy(bytes memory bytecode, bytes32 salt) external view returns (bool) {
+    address addr = this.computeAddress(bytecode, salt);
+    return addr.code.length > 0;
+  }
+
+  function delegateExecute(address target, bytes memory data) public payable onlyOwner {
+    (bool success, bytes memory result) = target.delegatecall(data);
+    if (!success) {
+      assembly {
+        revert(add(result, 32), mload(result))
+      }
+    }
+  }
+
+  function staticExecute(address target, bytes memory data) external view returns (bytes memory) {
+    (bool success, bytes memory result) = target.staticcall(data);
+    if (!success) {
+      assembly {
+        revert(add(result, 32), mload(result))
+      }
+    }
+    return result;
+  }
+
+  /// @inheritdoc IAccount
+  function validateUserOp(
+    PackedUserOperation calldata userOp,
+    bytes32 userOpHash,
+    uint256 missingAccountFunds
+  ) external virtual override returns (uint256 validationData) {
+    _requireFromEntryPoint();
+    validationData = _validateSignature(userOp, userOpHash);
+    _validateNonce(userOp.nonce);
+    _payPrefund(missingAccountFunds);
   }
 }

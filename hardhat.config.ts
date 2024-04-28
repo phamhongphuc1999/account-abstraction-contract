@@ -1,19 +1,41 @@
 import '@nomicfoundation/hardhat-toolbox';
+import '@nomiclabs/hardhat-etherscan';
 import '@typechain/hardhat';
 import 'hardhat-gas-reporter';
 import 'hardhat-prettier';
-import { HardhatUserConfig } from 'hardhat/config';
+import { HardhatUserConfig, task } from 'hardhat/config';
 import 'solidity-coverage';
 import { DEPLOY_ACCOUNT } from './constants';
 
+// This is a sample Hardhat task. To learn how to create your own go to
+// https://hardhat.org/guides/create-task.html
+task('accounts', 'Prints the list of accounts', async (_, hre) => {
+  const accounts = await hre.ethers.getSigners();
+
+  for (const account of accounts) {
+    console.log(account.address);
+  }
+});
+
 const config: HardhatUserConfig = {
-  solidity: '0.8.23',
+  solidity: {
+    version: '0.8.23',
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 500,
+      },
+    },
+  },
   typechain: {
     outDir: 'typechain',
     target: 'ethers-v5',
   },
   // defaultNetwork: 'bscTestnet',
   networks: {
+    hardhat: {
+      allowUnlimitedContractSize: true,
+    },
     bscTestnet: {
       url: 'https://data-seed-prebsc-2-s2.binance.org:8545/',
       chainId: 97,
