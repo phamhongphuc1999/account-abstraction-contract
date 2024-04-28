@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.12;
+pragma solidity ^0.8.23;
 
 contract ISignatureValidatorConstants {
   // bytes4(keccak256("isValidSignature(bytes,bytes)")

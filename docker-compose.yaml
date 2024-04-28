@@ -1,0 +1,8 @@
+version: '3'
+services:
+  ubuntu_container:
+    container_name: aa-contract
+    image: ubuntu:latest
+    tty: true
+    volumes:
+      - ./:/workspaces
