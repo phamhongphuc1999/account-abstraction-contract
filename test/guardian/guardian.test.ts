@@ -11,8 +11,8 @@ import {
   Account__factory,
   SimpleEntryPoint,
   SimpleEntryPoint__factory,
-} from '../typechain';
-import { AddressZero, createAccountOwner, fund, sendEntryPoint } from './utils';
+} from '../../typechain';
+import { AddressZero, createAccountOwner, fund, sendEntryPoint } from '../utils';
 
 async function getEta() {
   const blockNumber = await ethers.provider.getBlockNumber();
@@ -55,7 +55,7 @@ describe('Guardian', function () {
     let decodedResult = await account.accountGuardian();
     expect(decodedResult).to.equal(AddressZero);
 
-    callData = accountInter.encodeFunctionData('deployGuardian', [salt, accountFactory.address]);
+    callData = accountInter.encodeFunctionData('deployGuardian', [salt]);
     callData = accountInter.encodeFunctionData('execute', [account.address, 0, callData]);
     const _nonce = await entryPoint.getNonce(account.address, '0x0');
     await sendEntryPoint(
@@ -256,7 +256,6 @@ describe('Guardian', function () {
   });
   it('Should change owner', async () => {
     const newOwner = createAccountOwner();
-
     const dataHash = ethers.utils.hashMessage(newOwner.address);
     const guardians = [guardian1, guardian2, guardian4];
     guardians.sort((a, b) => (BigNumber.from(a.address).lt(BigNumber.from(b.address)) ? -1 : 1));
@@ -264,20 +263,16 @@ describe('Guardian', function () {
       guardians.map(async (w) => await w.signMessage(newOwner.address))
     );
     const signatures = hexConcat(sigs);
-    let accountAddress = await accountFactory.getAddress(
-      accountOwner.address,
-      '0x'.padEnd(66, '0')
-    );
+    let accountAddress = await accountFactory.getAddress(accountOwner.address, salt);
     expect(account.address).to.be.equal(accountAddress);
-    await accountGuardian.connect(guardian1).changeOwner(dataHash, newOwner.address, signatures, {
-      value: ethers.utils.parseEther('0.1'),
-      gasLimit: 1000000,
-    });
-    const newAccountAddress = await accountFactory.getAddress(
-      newOwner.address,
-      '0x'.padEnd(66, '0')
-    );
-    accountAddress = await accountFactory.getAddress(accountOwner.address, '0x'.padEnd(66, '0'));
+    await accountGuardian
+      .connect(guardian1)
+      .changeOwner(accountFactory.address, dataHash, newOwner.address, signatures, {
+        value: ethers.utils.parseEther('0.1'),
+        gasLimit: 1000000,
+      });
+    const newAccountAddress = await accountFactory.getAddress(newOwner.address, salt);
+    accountAddress = await accountFactory.getAddress(accountOwner.address, salt);
     expect(await account.owner()).to.be.eq(newOwner.address);
     expect(await accountGuardian.owner()).to.be.eq(newOwner.address);
     expect(account.address).to.be.equal(newAccountAddress);

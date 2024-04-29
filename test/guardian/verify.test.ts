@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { Verifier__factory } from '../typechain';
-import { generateCalldata, generateProof, verifyProof } from './circom-utils';
+import { Verifier__factory } from '../../typechain';
+import { generateCalldata, generateProof, verifyProof } from '../circom-utils';
 
 describe('Verify', function () {
   const _account1 = '0x9A85752B25Cb26a1E42f8E095588e4647859Bc36';

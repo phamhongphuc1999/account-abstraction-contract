@@ -182,14 +182,14 @@ contract Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initiali
       __newOwner != owner && __newOwner != address(0),
       'Account::changeOwner: invalid newOwner'
     );
-    owner = __newOwner;
     _accountFactory.changeOwner(this, _newOwner);
+    owner = __newOwner;
     emit OwnerChanged(__newOwner);
   }
 
-  function deployGuardian(bytes32 _salt, AccountFactory _accountFactory) public {
+  function deployGuardian(bytes32 _salt) public {
     AccountGuardian manager = (new AccountGuardian){salt: _salt}();
-    manager.initialize(this, _accountFactory);
+    manager.initialize(this);
     setUpGuardian(address(manager));
   }
 

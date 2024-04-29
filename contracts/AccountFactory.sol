@@ -59,7 +59,7 @@ contract AccountFactory {
   function changeOwner(Account _account, bytes memory _newOwner) public {
     require(
       address(_account) == msg.sender,
-      'AccountFactory::changeOwner: Only account can change yourself'
+      'AccountFactory::changeOwner: Only account can change itself'
     );
     address oldOwner = _account.owner();
     address account = owners[oldOwner];

@@ -11,7 +11,6 @@ import '../interfaces/ISignatureValidator.sol';
 contract AccountGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureValidatorConstants {
   address public owner;
   Account public account;
-  AccountFactory private accountFactory;
   uint256 public threshold;
   uint256 public guardianCount;
   uint256 private delay;
@@ -66,10 +65,9 @@ contract AccountGuardian is Verifier, Initializable, UUPSUpgradeable, ISignature
     );
   }
 
-  function initialize(Account _account, AccountFactory _accountFactory) public initializer {
+  function initialize(Account _account) public initializer {
     account = _account;
     owner = _account.owner();
-    accountFactory = _accountFactory;
   }
 
   function setupGuardians(
@@ -182,9 +180,7 @@ contract AccountGuardian is Verifier, Initializable, UUPSUpgradeable, ISignature
           r,
           s
         );
-      } else {
-        currentGuardian = ecrecover(dataHash, v, r, s);
-      }
+      } else currentGuardian = ecrecover(dataHash, v, r, s);
       if (guardians[currentGuardian]) signatureCount++;
     }
     return signatureCount >= requiredSignatures;
@@ -196,24 +192,19 @@ contract AccountGuardian is Verifier, Initializable, UUPSUpgradeable, ISignature
     bytes memory signatures
   ) public view returns (bool) {
     uint256 _threshold = threshold;
-    require(_threshold > 0, 'GuardianManager::checkMultisig: invalid threshold');
+    require(_threshold > 0, 'AccountGuardian::checkMultisig: invalid threshold');
     return checkSignatures(dataHash, data, signatures, threshold);
   }
 
-  /**
-   * change the owner of the current account that this guardian is managing
-   * @param dataHash the preimage hash of the calldata
-   * @param _newOwner the address of new owner
-   * @param signatures the signature of the guardians over data
-   */
   function changeOwner(
+    AccountFactory accountFactory,
     bytes32 dataHash,
     bytes memory _newOwner,
     bytes memory signatures
   ) public payable onlyGuardian {
     require(
       checkMultisig(dataHash, _newOwner, signatures),
-      'GuardianManager::changeOwner: invalid multi sig'
+      'AccountGuardian::changeOwner: invalid multi sig'
     );
     address __newOwner = address(uint160(bytes20(_newOwner)));
     account.changeOwner(accountFactory, _newOwner);
