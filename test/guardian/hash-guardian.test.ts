@@ -12,8 +12,13 @@ import {
   SimpleEntryPoint,
   SimpleEntryPoint__factory,
 } from '../../typechain';
+import {
+  generateCalldata,
+  generatePoseidonHash,
+  generateProof,
+  verifyProof,
+} from '../circom-utils';
 import { AddressZero, createAccountOwner, fund, sendEntryPoint } from '../utils';
-import { generatePoseidonHash } from '../circom-utils';
 
 async function getEta() {
   const blockNumber = await ethers.provider.getBlockNumber();
@@ -254,5 +259,108 @@ describe('HashGuardian', function () {
     expect(_result[0]).to.be.eq(false);
     expect(_result[1]).to.be.eq(0);
     expect(await hashGuardian.guardianCount()).to.be.eq(3);
+  });
+  it('Should change owner', async function () {
+    const newOwner = createAccountOwner();
+    // submit new owner
+    const _submitCalldata = hashGuardianInter.encodeFunctionData('submitNewOwner', [
+      newOwner.address,
+    ]);
+    let _callData = accountInter.encodeFunctionData('execute', [
+      hashGuardian.address,
+      0,
+      _submitCalldata,
+    ]);
+    let _nonce = await entryPoint.getNonce(account.address, '0x0');
+    await sendEntryPoint(
+      accountFactory,
+      { sender: account.address, callData: _callData, nonce: _nonce },
+      accountOwner,
+      entryPoint
+    );
+    expect(await hashGuardian._tempNewOwner()).to.be.eq(newOwner.address);
+    // comfirm change new owner
+    let _proof = await generateProof(guardian1.address);
+    let _verify = await verifyProof(_proof.proof, _proof.publicSignals);
+    expect(_verify).to.be.true;
+    if (_verify) {
+      const { pA, pB, pC, pubSignals } = await generateCalldata(_proof.proof, _proof.publicSignals);
+      const _comfirmCalldata = hashGuardianInter.encodeFunctionData('comfirmChangeOwner', [
+        pA,
+        pB,
+        pC,
+        pubSignals,
+      ]);
+      let _callData = accountInter.encodeFunctionData('execute', [
+        hashGuardian.address,
+        0,
+        _comfirmCalldata,
+      ]);
+      let _nonce = await entryPoint.getNonce(account.address, '0x0');
+      await sendEntryPoint(
+        accountFactory,
+        { sender: account.address, callData: _callData, nonce: _nonce },
+        accountOwner,
+        entryPoint
+      );
+      expect(await hashGuardian.comfirms(_hash1)).to.be.true;
+      expect(await hashGuardian.isEnoughComfirm()).to.be.false;
+    }
+
+    _proof = await generateProof(guardian2.address);
+    _verify = await verifyProof(_proof.proof, _proof.publicSignals);
+    expect(_verify).to.be.true;
+    if (_verify) {
+      const { pA, pB, pC, pubSignals } = await generateCalldata(_proof.proof, _proof.publicSignals);
+      const _comfirmCalldata = hashGuardianInter.encodeFunctionData('comfirmChangeOwner', [
+        pA,
+        pB,
+        pC,
+        pubSignals,
+      ]);
+      let _callData = accountInter.encodeFunctionData('execute', [
+        hashGuardian.address,
+        0,
+        _comfirmCalldata,
+      ]);
+      let _nonce = await entryPoint.getNonce(account.address, '0x0');
+      await sendEntryPoint(
+        accountFactory,
+        { sender: account.address, callData: _callData, nonce: _nonce },
+        accountOwner,
+        entryPoint
+      );
+      expect(await hashGuardian.comfirms(_hash2)).to.be.true;
+      expect(await hashGuardian.isEnoughComfirm()).to.be.true;
+    }
+    // change owner
+    const oldOwner = await account.owner();
+    let _changeCalldata = hashGuardianInter.encodeFunctionData('changeOwner', [
+      accountFactory.address,
+    ]);
+    _callData = accountInter.encodeFunctionData('execute', [
+      hashGuardian.address,
+      0,
+      _changeCalldata,
+    ]);
+    _nonce = await entryPoint.getNonce(account.address, '0x0');
+    await sendEntryPoint(
+      accountFactory,
+      { sender: account.address, callData: _callData, nonce: _nonce },
+      accountOwner,
+      entryPoint
+    );
+    const oldAccountAddress = await accountFactory.getAddress(oldOwner, salt);
+    expect(oldAccountAddress).to.be.eq(AddressZero);
+    const newAccountAddress = await accountFactory.getAddress(newOwner.address, salt);
+    expect(newAccountAddress).to.be.eq(account.address);
+    const _guardianOwnerAddress = await hashGuardian.owner();
+    expect(_guardianOwnerAddress).to.be.eq(newOwner.address);
+    const _tempNewOwner = await hashGuardian._tempNewOwner();
+    expect(_tempNewOwner).to.be.eq(AddressZero);
+    const _cHash1 = await hashGuardian.comfirms(_hash1);
+    expect(_cHash1).to.be.false;
+    const _cHash2 = await hashGuardian.comfirms(_hash2);
+    expect(_cHash2).to.be.false;
   });
 });

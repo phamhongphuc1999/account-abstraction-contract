@@ -90,10 +90,9 @@ contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureVal
     return counter >= threshold;
   }
 
-  function submitNewOwner(bytes memory _newOwner) public onlyOwner {
+  function submitNewOwner(address _newOwner) public onlyOwner {
     require(_tempNewOwner == address(0), 'current transaction must be finished');
-    _tempNewOwner = address(uint160(bytes20(_newOwner)));
-    resetComfirm();
+    _tempNewOwner = _newOwner;
   }
 
   function comfirmChangeOwner(
@@ -115,6 +114,7 @@ contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureVal
     account.changeOwner(accountFactory, _tempNewOwner);
     owner = _tempNewOwner;
     _tempNewOwner = address(0);
+    resetComfirm();
   }
 
   function setupGuardians(
