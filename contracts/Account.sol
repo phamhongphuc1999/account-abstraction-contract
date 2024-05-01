@@ -9,7 +9,7 @@ import '@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import '@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol';
 import './AccountFactory.sol';
-import './guardian/AccountGuardian.sol';
+import './guardian/HashGuardian.sol';
 
 contract Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initializable {
   address public owner;
@@ -168,17 +168,16 @@ contract Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initiali
 
   function changeOwner(
     AccountFactory _accountFactory,
-    bytes memory _newOwner
+    address _newOwner
   ) public onlyAccountGuardian {
-    address __newOwner = address(uint160(bytes20(_newOwner)));
-    require(__newOwner != owner && __newOwner != address(0), 'invalid newOwner');
+    require(_newOwner != owner && _newOwner != address(0), 'invalid newOwner');
     _accountFactory.changeOwner(this, _newOwner);
-    owner = __newOwner;
-    emit OwnerChanged(__newOwner);
+    owner = _newOwner;
+    emit OwnerChanged(_newOwner);
   }
 
-  function deployGuardian(bytes32 _salt) public {
-    AccountGuardian manager = (new AccountGuardian){salt: _salt}();
+  function deployGuardian(bytes32 _salt) public onlyOwner {
+    HashGuardian manager = (new HashGuardian){salt: _salt}();
     manager.initialize(this);
     setUpGuardian(address(manager));
   }

@@ -56,11 +56,11 @@ contract AccountFactory {
     return rawAccount;
   }
 
-  function changeOwner(Account _account, bytes memory _newOwner) public {
+  function changeOwner(Account _account, address _newOwner) public {
     require(address(_account) == msg.sender, 'Only account can change itself');
     address oldOwner = _account.owner();
     address account = owners[oldOwner];
-    address newOwner = address(uint160(bytes20(_newOwner)));
+    address newOwner = _newOwner;
     delete owners[oldOwner];
     owners[newOwner] = account;
   }
