@@ -50,8 +50,8 @@ contract Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initiali
   }
 
   function _onlyAccountGuardian() internal view {
-    require(accountGuardian != address(0), 'Account::_onlyAccountGuardian: guardian not setup yet');
-    require(msg.sender == accountGuardian, 'Account::_onlyAccountGuardian: only guardian manager');
+    require(accountGuardian != address(0), 'guardian not setup yet');
+    require(msg.sender == accountGuardian, 'only guardian manager');
   }
 
   /**
@@ -110,18 +110,11 @@ contract Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initiali
 
   // Require the function call went through EntryPoint or owner
   function _requireFromEntryPointOrOwner() internal view {
-    require(
-      msg.sender == address(entryPoint()) || msg.sender == owner,
-      'account: not Owner or EntryPoint'
-    );
+    require(msg.sender == address(entryPoint()) || msg.sender == owner, 'not Owner or EntryPoint');
   }
 
-  // function setUpGuardian(address _accountGuardian) public onlyOwner {
-  function setUpGuardian(address _accountGuardian) public {
-    require(
-      accountGuardian == address(0),
-      'Account::setupGuardian: accountGuardian has been setup'
-    );
+  function setUpGuardian(address _accountGuardian) public onlyOwner {
+    require(accountGuardian == address(0), 'accountGuardian has been setup');
     accountGuardian = _accountGuardian;
     emit GuardianInitialized(_accountGuardian);
   }
@@ -178,10 +171,7 @@ contract Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initiali
     bytes memory _newOwner
   ) public onlyAccountGuardian {
     address __newOwner = address(uint160(bytes20(_newOwner)));
-    require(
-      __newOwner != owner && __newOwner != address(0),
-      'Account::changeOwner: invalid newOwner'
-    );
+    require(__newOwner != owner && __newOwner != address(0), 'invalid newOwner');
     _accountFactory.changeOwner(this, _newOwner);
     owner = __newOwner;
     emit OwnerChanged(__newOwner);

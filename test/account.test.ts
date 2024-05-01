@@ -65,7 +65,7 @@ describe('Account', function () {
     );
     await expect(
       account.connect(ethers.provider.getSigner(1)).execute(accounts[2], ONE_ETH, '0x')
-    ).to.be.revertedWith('account: not Owner or EntryPoint');
+    ).to.be.revertedWith('not Owner or EntryPoint');
   });
 
   it('should pack in js the same as solidity', async () => {

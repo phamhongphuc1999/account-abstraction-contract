@@ -93,7 +93,7 @@ contract AccountGuardian is Verifier, Initializable, UUPSUpgradeable, ISignature
     emit ThresholdChanged(_threshold);
   }
 
-  function setThreshold(uint256 _threshold) external {
+  function setThreshold(uint256 _threshold) external onlyOwner {
     require(threshold > 0, "threshold haven't been setup yet.");
     require(
       _threshold > 0 && _threshold <= guardianCount,
@@ -103,7 +103,7 @@ contract AccountGuardian is Verifier, Initializable, UUPSUpgradeable, ISignature
     emit ThresholdChanged(_threshold);
   }
 
-  function addGuardian(address _guardian) external {
+  function addGuardian(address _guardian) external onlyOwner {
     require(threshold > 0, "threshold haven't been setup yet.");
     require(_guardian != address(0) && _guardian != address(this), 'invalid guardian address.');
     require(!guardians[_guardian], 'guardian already existed.');
@@ -112,7 +112,7 @@ contract AccountGuardian is Verifier, Initializable, UUPSUpgradeable, ISignature
     emit GuardianAdded(_guardian);
   }
 
-  function removeGuardian(address _guardian) external {
+  function removeGuardian(address _guardian) external onlyOwner {
     require(threshold > 0, "threshold haven't been setup yet.");
     require(_guardian != address(0) && _guardian != address(this), 'invalid guardian address.');
     require(guardians[_guardian], 'guardian not existed.');
@@ -192,7 +192,7 @@ contract AccountGuardian is Verifier, Initializable, UUPSUpgradeable, ISignature
     bytes memory signatures
   ) public view returns (bool) {
     uint256 _threshold = threshold;
-    require(_threshold > 0, 'AccountGuardian::checkMultisig: invalid threshold');
+    require(_threshold > 0, 'Invalid threshold');
     return checkSignatures(dataHash, data, signatures, threshold);
   }
 
@@ -202,10 +202,7 @@ contract AccountGuardian is Verifier, Initializable, UUPSUpgradeable, ISignature
     bytes memory _newOwner,
     bytes memory signatures
   ) public payable onlyGuardian {
-    require(
-      checkMultisig(dataHash, _newOwner, signatures),
-      'AccountGuardian::changeOwner: invalid multi sig'
-    );
+    require(checkMultisig(dataHash, _newOwner, signatures), 'Invalid multi sig');
     address __newOwner = address(uint160(bytes20(_newOwner)));
     account.changeOwner(accountFactory, _newOwner);
     owner = __newOwner;
@@ -254,9 +251,8 @@ contract AccountGuardian is Verifier, Initializable, UUPSUpgradeable, ISignature
 
     transactionQueue[txHash] = false;
     bytes memory callData;
-    if (bytes(_signature).length == 0) {
-      callData = _data;
-    } else {
+    if (bytes(_signature).length == 0) callData = _data;
+    else {
       callData = abi.encodePacked(bytes4(keccak256(bytes(_signature))), _data);
     }
 
