@@ -5,6 +5,18 @@
     "repository": "https://github.com/phamhongphuc1999/account-abstraction-contract.git",
     "author": "phamhongphuc1999",
     "license": "MIT",
+    "scripts": {
+        "rmCompile": "rm -rf artifacts & rm -rf typechain & rm -rf cache & npx hardhat compile",
+        "compile": "npx hardhat compile",
+        "localNode": "npx hardhat node",
+        "localDeploy": "npx hardhat run --network localhost",
+        "deploy": "npx hardhat run --network",
+        "scripts": "npx hardhat run",
+        "test": "npx hardhat test",
+        "lint": "eslint --config ./.eslintrc-staged.js --cache --fix",
+        "eslint": "eslint .",
+        "prepare": "husky install"
+    },
     "dependencies": {
         "@account-abstraction/contracts": "^0.7.0",
         "@openzeppelin/contracts": "^5.0.2",
@@ -50,18 +62,6 @@
         "ts-node": "^10.9.1",
         "typechain": "^8.1.1",
         "typescript": "^5.0.4"
-    },
-    "scripts": {
-        "rmCompile": "rm -rf artifacts & rm -rf typechain & rm -rf cache & npx hardhat compile",
-        "compile": "npx hardhat compile",
-        "localNode": "npx hardhat node",
-        "localDeploy": "npx hardhat run --network localhost",
-        "deploy": "npx hardhat run --network",
-        "scripts": "npx hardhat run",
-        "test": "npx hardhat test",
-        "lint": "eslint --config ./.eslintrc-staged.js --cache --fix",
-        "eslint": "eslint .",
-        "prepare": "husky install"
     },
     "commitlint": {
         "extends": [

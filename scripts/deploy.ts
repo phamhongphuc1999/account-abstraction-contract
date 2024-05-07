@@ -14,7 +14,7 @@ async function main() {
 
   console.log('network config', network.config);
   const networkName = network.name;
-  const fileName = `ignore_${Date.now()}_${networkName}_addresses`;
+  const fileName = `${Date.now()}_${networkName}_addresses`;
   writeFileSync(resolve(`./scripts/${fileName}`), JSON.stringify(deployedAddresses), 'utf-8');
 
   console.log('======================== Contracts deployed ========================');
