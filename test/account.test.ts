@@ -19,7 +19,6 @@ import {
   createAccount,
   createAccountOwner,
   createAddress,
-  encodeUserOp,
   fillUserOpDefaults,
   getBalance,
   getUserOpHash,
@@ -69,10 +68,9 @@ describe('Account', function () {
   });
 
   it('should pack in js the same as solidity', async () => {
-    const op = fillUserOpDefaults({ sender: accounts[0] });
-    const encoded = encodeUserOp(op);
+    const op = await fillUserOpDefaults({ sender: accounts[0] });
     const packed = packUserOp(op);
-    expect(await testUtil.encodeUserOp(packed)).to.equal(encoded);
+    expect(await testUtil.packUserOp(op)).to.equal(packed);
   });
 
   describe('#executeBatch', () => {
@@ -169,11 +167,12 @@ describe('Account', function () {
         chainId
       );
 
-      userOpHash = getUserOpHash(userOp, entryPointEoa, chainId);
+      userOpHash = await getUserOpHash(userOp, entryPointEoa, chainId);
+
       expectedPay = actualGasPrice * (callGasLimit + verificationGasLimit);
+
       preBalance = await getBalance(account.address);
-      const packedOp = packUserOp(userOp);
-      const ret = await account.validateUserOp(packedOp, userOpHash, expectedPay, {
+      const ret = await account.validateUserOp(userOp, userOpHash, expectedPay, {
         gasPrice: actualGasPrice,
       });
       await ret.wait();
@@ -183,11 +182,11 @@ describe('Account', function () {
       const postBalance = await getBalance(account.address);
       expect(preBalance - postBalance).to.eql(expectedPay);
     });
+
     it('should return NO_SIG_VALIDATION on wrong signature', async () => {
       const userOpHash = HashZero;
-      const packedOp = packUserOp(userOp);
       const deadline = await account.callStatic.validateUserOp(
-        { ...packedOp, nonce: 1 },
+        { ...userOp, nonce: 1 },
         userOpHash,
         0
       );

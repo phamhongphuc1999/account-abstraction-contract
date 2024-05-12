@@ -8,6 +8,6 @@ import '@account-abstraction/contracts/core/EntryPoint.sol';
  */
 
 /// @custom:security-contact https://bounty.ethereum.org
-contract SimpleEntryPoint is EntryPoint {
+contract MockEntryPoint is EntryPoint {
   //
 }

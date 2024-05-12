@@ -1,17 +1,6 @@
 import { ecsign, keccak256 as keccak256_buffer, toRpcSig } from 'ethereumjs-util';
-import { BigNumber, BigNumberish, Contract, Signer, Wallet } from 'ethers';
-import {
-  BytesLike,
-  Hexable,
-  Interface,
-  arrayify,
-  defaultAbiCoder,
-  hexDataSlice,
-  hexZeroPad,
-  hexlify,
-  keccak256,
-  parseEther,
-} from 'ethers/lib/utils';
+import { BigNumber, Contract, Signer, Wallet } from 'ethers';
+import { arrayify, defaultAbiCoder, hexDataSlice, keccak256, parseEther } from 'ethers/lib/utils';
 import { ethers } from 'hardhat';
 import {
   Account,
@@ -19,12 +8,9 @@ import {
   AccountFactory__factory,
   Account__factory,
   ERC1967Proxy__factory,
-  SimpleEntryPoint,
-  SimpleEntryPoint__factory,
-  TestERC20__factory,
-  TestPaymasterRevertCustomError__factory,
+  MockEntryPoint,
 } from '../typechain';
-import { PackedUserOperation, UserOperation } from './types';
+import { UserOperation } from './types';
 
 export const AddressZero = ethers.constants.AddressZero;
 export const HashZero = ethers.constants.HashZero;
@@ -42,10 +28,7 @@ export const DefaultsForUserOp: UserOperation = {
   preVerificationGas: 21000, // should also cover calldata cost.
   maxFeePerGas: 0,
   maxPriorityFeePerGas: 1e9,
-  paymaster: AddressZero,
-  paymasterData: '0x',
-  paymasterVerificationGasLimit: 3e5,
-  paymasterPostOpGasLimit: 0,
+  paymasterAndData: '0x',
   signature: '0x',
 };
 
@@ -62,60 +45,31 @@ const panicCodes: { [key: number]: string } = {
   0x51: 'zero-initialized variable of internal function type',
 };
 
-const decodeRevertReasonContracts = new Interface([
-  ...SimpleEntryPoint__factory.createInterface().fragments,
-  ...TestPaymasterRevertCustomError__factory.createInterface().fragments,
-  ...TestERC20__factory.createInterface().fragments, // for OZ errors,
-  'error ECDSAInvalidSignature()',
-]); // .filter(f => f.type === 'error'))
-
-export function decodeRevertReason(data: string | Error, nullIfNoMatch = true): string | null {
-  if (typeof data !== 'string') {
-    const err = data as any;
-    data = (err.data ?? err.error?.data) as string;
-    if (typeof data !== 'string') throw err;
-  }
-
+export function decodeRevertReason(data: string, nullIfNoMatch = true): string | null {
   const methodSig = data.slice(0, 10);
   const dataParams = '0x' + data.slice(10);
 
-  // can't add Error(string) to xface...
   if (methodSig === '0x08c379a0') {
     const [err] = ethers.utils.defaultAbiCoder.decode(['string'], dataParams);
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     return `Error(${err})`;
+  } else if (methodSig === '0x00fa072b') {
+    const [opindex, paymaster, msg] = ethers.utils.defaultAbiCoder.decode(
+      ['uint256', 'address', 'string'],
+      dataParams
+    );
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    return `FailedOp(${opindex}, ${paymaster !== AddressZero ? paymaster : 'none'}, ${msg})`;
   } else if (methodSig === '0x4e487b71') {
     const [code] = ethers.utils.defaultAbiCoder.decode(['uint256'], dataParams);
     return `Panic(${panicCodes[code] ?? code} + ')`;
   }
-
-  try {
-    const err = decodeRevertReasonContracts.parseError(data);
-    // treat any error "bytes" argument as possible error to decode (e.g. FailedOpWithRevert, PostOpReverted)
-    const args = err.args.map((arg: any, index) => {
-      switch (err.errorFragment.inputs[index].type) {
-        case 'bytes':
-          return decodeRevertReason(arg);
-        case 'string':
-          return `"${arg as string}"`;
-        default:
-          return arg;
-      }
-    });
-    return `${err.name}(${args.join(',')})`;
-  } catch (e) {
-    // throw new Error('unsupported errorSig ' + data)
-    if (!nullIfNoMatch) {
-      return data;
-    }
-    return null;
+  if (!nullIfNoMatch) {
+    return data;
   }
+  return null;
 }
 
-// rethrow "cleaned up" exception.
-// - stack trace goes back to method (or catch) line, not inner provider
-// - attempt to parse revert data (needed for geth)
-// use with ".catch(rethrow())", so that current source file/line is meaningful.
 export function rethrow(): (e: Error) => void {
   const callerStack = new Error()
     .stack!.replace(/Error.*\n.*at.*\n/, '')
@@ -166,6 +120,33 @@ export async function getDeployedAddress(
   return ethers.utils.getCreate2Address(accountFactory.address, salt, initCodeHash);
 }
 
+export async function fund(contractOrAddress: string | Contract, amountEth = '1'): Promise<void> {
+  let address: string;
+  if (typeof contractOrAddress === 'string') {
+    address = contractOrAddress;
+  } else {
+    address = contractOrAddress.address;
+  }
+  await ethers.provider.getSigner().sendTransaction({ to: address, value: parseEther(amountEth) });
+}
+
+export function fillUserOpDefaults(
+  op: Partial<UserOperation>,
+  defaults = DefaultsForUserOp
+): UserOperation {
+  const partial: any = { ...op };
+  // we want "item:undefined" to be used from defaults, and not override defaults, so we must explicitly
+  // remove those so "merge" will succeed.
+  for (const key in partial) {
+    if (partial[key] == null) {
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+      delete partial[key];
+    }
+  }
+  const filled = { ...defaults, ...partial };
+  return filled;
+}
+
 export function callDataCost(data: string): number {
   return ethers.utils
     .arrayify(data)
@@ -173,10 +154,71 @@ export function callDataCost(data: string): number {
     .reduce((sum, x) => sum + x);
 }
 
+export function packUserOp(op: UserOperation, forSignature = true): string {
+  if (forSignature) {
+    return defaultAbiCoder.encode(
+      [
+        'address',
+        'uint256',
+        'bytes32',
+        'bytes32',
+        'uint256',
+        'uint256',
+        'uint256',
+        'uint256',
+        'uint256',
+        'bytes32',
+      ],
+      [
+        op.sender,
+        op.nonce,
+        keccak256(op.initCode),
+        keccak256(op.callData),
+        op.callGasLimit,
+        op.verificationGasLimit,
+        op.preVerificationGas,
+        op.maxFeePerGas,
+        op.maxPriorityFeePerGas,
+        keccak256(op.paymasterAndData),
+      ]
+    );
+  } else {
+    // for the purpose of calculating gas cost encode also signature (and no keccak of bytes)
+    return defaultAbiCoder.encode(
+      [
+        'address',
+        'uint256',
+        'bytes',
+        'bytes',
+        'uint256',
+        'uint256',
+        'uint256',
+        'uint256',
+        'uint256',
+        'bytes',
+        'bytes',
+      ],
+      [
+        op.sender,
+        op.nonce,
+        op.initCode,
+        op.callData,
+        op.callGasLimit,
+        op.verificationGasLimit,
+        op.preVerificationGas,
+        op.maxFeePerGas,
+        op.maxPriorityFeePerGas,
+        op.paymasterAndData,
+        op.signature,
+      ]
+    );
+  }
+}
+
 export async function fillUserOp(
   accountFactory: AccountFactory,
   op: Partial<UserOperation>,
-  entryPoint?: SimpleEntryPoint,
+  entryPoint?: MockEntryPoint,
   getNonceFunction = 'getNonce'
 ): Promise<UserOperation> {
   const op1 = { ...op };
@@ -226,15 +268,7 @@ export async function fillUserOp(
       to: op1.sender,
       data: op1.callData,
     });
-    op1.callGasLimit = gasEtimated;
-  }
-  if (op1.paymaster != null) {
-    if (op1.paymasterVerificationGasLimit == null) {
-      op1.paymasterVerificationGasLimit = DefaultsForUserOp.paymasterVerificationGasLimit;
-    }
-    if (op1.paymasterPostOpGasLimit == null) {
-      op1.paymasterPostOpGasLimit = DefaultsForUserOp.paymasterPostOpGasLimit;
-    }
+    op1.callGasLimit = gasEtimated; // .add(55000)
   }
   if (op1.maxFeePerGas == null) {
     if (provider == null) throw new Error('must have entryPoint to autofill maxFeePerGas');
@@ -247,155 +281,14 @@ export async function fillUserOp(
     op1.maxPriorityFeePerGas = DefaultsForUserOp.maxPriorityFeePerGas;
   }
   const op2 = fillUserOpDefaults(op1);
-  // eslint-disable-next-line @typescript-eslint/no-base-to-string
   if (op2.preVerificationGas.toString() === '0') {
-    // TODO: we don't add overhead, which is ~21000 for a single TX, but much lower in a batch.
-    op2.preVerificationGas = callDataCost(encodeUserOp(op2, false));
+    op2.preVerificationGas = callDataCost(packUserOp(op2, false));
   }
   return op2;
 }
 
-export async function fillAndSign(
-  accountFactory: AccountFactory,
-  op: Partial<UserOperation>,
-  signer: Wallet | Signer,
-  entryPoint?: SimpleEntryPoint,
-  getNonceFunction = 'getNonce'
-): Promise<UserOperation> {
-  const provider = entryPoint?.provider;
-  const op2 = await fillUserOp(accountFactory, op, entryPoint, getNonceFunction);
-  const chainId = await provider!.getNetwork().then((net) => net.chainId);
-  const message = arrayify(getUserOpHash(op2, entryPoint!.address, chainId));
-
-  let signature;
-  try {
-    signature = await signer.signMessage(message);
-  } catch (err: any) {
-    signature = await (signer as any)._legacySignMessage(message);
-  }
-  return { ...op2, signature };
-}
-
-export async function fillSignAndPack(
-  accountFactory: AccountFactory,
-  op: Partial<UserOperation>,
-  signer: Wallet | Signer,
-  entryPoint?: SimpleEntryPoint,
-  getNonceFunction = 'getNonce'
-): Promise<PackedUserOperation> {
-  const filledAndSignedOp = await fillAndSign(
-    accountFactory,
-    op,
-    signer,
-    entryPoint,
-    getNonceFunction
-  );
-  return packUserOp(filledAndSignedOp);
-}
-
-export function packAccountGasLimits(
-  verificationGasLimit: BigNumberish,
-  callGasLimit: BigNumberish
-): string {
-  return ethers.utils.hexConcat([
-    hexZeroPad(hexlify(verificationGasLimit, { hexPad: 'left' }), 16),
-    hexZeroPad(hexlify(callGasLimit, { hexPad: 'left' }), 16),
-  ]);
-}
-
-export function packPaymasterData(
-  paymaster: string,
-  paymasterVerificationGasLimit: BytesLike | Hexable | number | bigint,
-  postOpGasLimit: BytesLike | Hexable | number | bigint,
-  paymasterData: string
-): string {
-  return ethers.utils.hexConcat([
-    paymaster,
-    hexZeroPad(hexlify(paymasterVerificationGasLimit, { hexPad: 'left' }), 16),
-    hexZeroPad(hexlify(postOpGasLimit, { hexPad: 'left' }), 16),
-    paymasterData,
-  ]);
-}
-
-export function packUserOp(userOp: UserOperation): PackedUserOperation {
-  const accountGasLimits = packAccountGasLimits(userOp.verificationGasLimit, userOp.callGasLimit);
-  const gasFees = packAccountGasLimits(userOp.maxPriorityFeePerGas, userOp.maxFeePerGas);
-  let paymasterAndData = '0x';
-  if (userOp.paymaster?.length >= 20 && userOp.paymaster !== AddressZero) {
-    paymasterAndData = packPaymasterData(
-      userOp.paymaster as string,
-      userOp.paymasterVerificationGasLimit,
-      userOp.paymasterPostOpGasLimit,
-      userOp.paymasterData as string
-    );
-  }
-  return {
-    sender: userOp.sender,
-    nonce: userOp.nonce,
-    callData: userOp.callData,
-    accountGasLimits,
-    initCode: userOp.initCode,
-    preVerificationGas: userOp.preVerificationGas,
-    gasFees,
-    paymasterAndData,
-    signature: userOp.signature,
-  };
-}
-
-export function encodeUserOp(userOp: UserOperation, forSignature = true): string {
-  const packedUserOp = packUserOp(userOp);
-  if (forSignature) {
-    return defaultAbiCoder.encode(
-      ['address', 'uint256', 'bytes32', 'bytes32', 'bytes32', 'uint256', 'bytes32', 'bytes32'],
-      [
-        packedUserOp.sender,
-        packedUserOp.nonce,
-        keccak256(packedUserOp.initCode),
-        keccak256(packedUserOp.callData),
-        packedUserOp.accountGasLimits,
-        packedUserOp.preVerificationGas,
-        packedUserOp.gasFees,
-        keccak256(packedUserOp.paymasterAndData),
-      ]
-    );
-  } else {
-    // for the purpose of calculating gas cost encode also signature (and no keccak of bytes)
-    return defaultAbiCoder.encode(
-      ['address', 'uint256', 'bytes', 'bytes', 'bytes32', 'uint256', 'bytes32', 'bytes', 'bytes'],
-      [
-        packedUserOp.sender,
-        packedUserOp.nonce,
-        packedUserOp.initCode,
-        packedUserOp.callData,
-        packedUserOp.accountGasLimits,
-        packedUserOp.preVerificationGas,
-        packedUserOp.gasFees,
-        packedUserOp.paymasterAndData,
-        packedUserOp.signature,
-      ]
-    );
-  }
-}
-
-export function fillUserOpDefaults(
-  op: Partial<UserOperation>,
-  defaults = DefaultsForUserOp
-): UserOperation {
-  const partial: any = { ...op };
-  // we want "item:undefined" to be used from defaults, and not override defaults, so we must explicitly
-  // remove those so "merge" will succeed.
-  for (const key in partial) {
-    if (partial[key] == null) {
-      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-      delete partial[key];
-    }
-  }
-  const filled = { ...defaults, ...partial };
-  return filled;
-}
-
 export function getUserOpHash(op: UserOperation, entryPoint: string, chainId: number): string {
-  const userOpHash = keccak256(encodeUserOp(op, true));
+  const userOpHash = keccak256(packUserOp(op, true));
   const enc = defaultAbiCoder.encode(
     ['bytes32', 'address', 'uint256'],
     [userOpHash, entryPoint, chainId]
@@ -403,26 +296,36 @@ export function getUserOpHash(op: UserOperation, entryPoint: string, chainId: nu
   return keccak256(enc);
 }
 
-export function signUserOp(
-  op: UserOperation,
-  signer: Wallet,
-  entryPoint: string,
-  chainId: number
-): UserOperation {
-  const message = getUserOpHash(op, entryPoint, chainId);
-  const msg1 = Buffer.concat([
-    Buffer.from('\x19Ethereum Signed Message:\n32', 'ascii'),
-    Buffer.from(arrayify(message)),
-  ]);
+export async function fillAndSign(
+  accountFactory: AccountFactory,
+  op: Partial<UserOperation>,
+  signer: Wallet | Signer,
+  entryPoint?: MockEntryPoint,
+  getNonceFunction = 'getNonce'
+): Promise<UserOperation> {
+  const provider = entryPoint?.provider;
+  const op2 = await fillUserOp(accountFactory, op, entryPoint, getNonceFunction);
 
-  const sig = ecsign(keccak256_buffer(msg1), Buffer.from(arrayify(signer.privateKey)));
-  // that's equivalent of:  await signer.signMessage(message);
-  // (but without "async"
-  const signedMessage1 = toRpcSig(sig.v, sig.r, sig.s);
-  return {
-    ...op,
-    signature: signedMessage1,
-  };
+  const chainId = await provider!.getNetwork().then((net) => net.chainId);
+  const message = arrayify(getUserOpHash(op2, entryPoint!.address, chainId));
+
+  return { ...op2, signature: await signer.signMessage(message) };
+}
+
+export async function sendEntryPoint(
+  accountFactory: AccountFactory,
+  op: Partial<UserOperation>,
+  signer: Wallet | Signer,
+  entryPoint: MockEntryPoint
+) {
+  const etherSigner = ethers.provider.getSigner();
+  const queueUserOp = await fillAndSign(accountFactory, op, signer, entryPoint);
+  const signerAddress = await signer.getAddress();
+  const tx = await entryPoint
+    .connect(etherSigner)
+    .handleOps([queueUserOp], signerAddress, { maxFeePerGas: 1e9, gasLimit: 1e7 });
+  const receipt = await tx.wait();
+  return receipt;
 }
 
 let counter = 0;
@@ -437,17 +340,6 @@ export function createAddress(): string {
   return createAccountOwner().address;
 }
 
-export async function getBalance(address: string): Promise<number> {
-  const balance = await ethers.provider.getBalance(address);
-  return parseInt(balance.toString());
-}
-
-export async function isDeployed(addr: string): Promise<boolean> {
-  const code = await ethers.provider.getCode(addr);
-  return code.length > 2;
-}
-
-// Deploys an implementation and a proxy pointing to this implementation
 export async function createAccount(
   ethersSigner: Signer,
   accountOwner: string,
@@ -471,28 +363,31 @@ export async function createAccount(
   };
 }
 
-export async function sendEntryPoint(
-  accountFactory: AccountFactory,
-  op: Partial<UserOperation>,
-  signer: Wallet | Signer,
-  entryPoint: SimpleEntryPoint
-) {
-  const etherSigner = ethers.provider.getSigner();
-  const queueUserOp = await fillSignAndPack(accountFactory, op, signer, entryPoint);
-  const signerAddress = await signer.getAddress();
-  const tx = await entryPoint
-    .connect(etherSigner)
-    .handleOps([queueUserOp], signerAddress, { maxFeePerGas: 1e9, gasLimit: 1e7 });
-  const receipt = await tx.wait();
-  return receipt;
+export function signUserOp(
+  op: UserOperation,
+  signer: Wallet,
+  entryPoint: string,
+  chainId: number
+): UserOperation {
+  const message = getUserOpHash(op, entryPoint, chainId);
+  const msg1 = Buffer.concat([
+    Buffer.from('\x19Ethereum Signed Message:\n32', 'ascii'),
+    Buffer.from(arrayify(message)),
+  ]);
+
+  const sig = ecsign(keccak256_buffer(msg1), Buffer.from(arrayify(signer.privateKey)));
+  // that's equivalent of:  await signer.signMessage(message);
+  // (but without "async"
+  const signedMessage1 = toRpcSig(sig.v, sig.r, sig.s);
+  return { ...op, signature: signedMessage1 };
 }
 
-export async function fund(contractOrAddress: string | Contract, amountEth = '1'): Promise<void> {
-  let address: string;
-  if (typeof contractOrAddress === 'string') {
-    address = contractOrAddress;
-  } else {
-    address = contractOrAddress.address;
-  }
-  await ethers.provider.getSigner().sendTransaction({ to: address, value: parseEther(amountEth) });
+export async function getBalance(address: string): Promise<number> {
+  const balance = await ethers.provider.getBalance(address);
+  return parseInt(balance.toString());
+}
+
+export async function isDeployed(addr: string): Promise<boolean> {
+  const code = await ethers.provider.getCode(addr);
+  return code.length > 2;
 }

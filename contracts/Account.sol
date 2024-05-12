@@ -3,15 +3,14 @@ pragma solidity ^0.8.23;
 
 import '@account-abstraction/contracts/core/BaseAccount.sol';
 import '@account-abstraction/contracts/samples/callback/TokenCallbackHandler.sol';
-import '@account-abstraction/contracts/core/Helpers.sol';
 import '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 import '@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
-import '@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol';
 import './AccountFactory.sol';
 import './guardian/HashGuardian.sol';
 
 contract Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initializable {
+  using ECDSA for bytes32;
   address public owner;
   address public accountGuardian;
 
@@ -23,6 +22,11 @@ contract Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initiali
 
   modifier onlyOwner() {
     _onlyOwner();
+    _;
+  }
+
+  modifier onlyAccountGuardian() {
+    _onlyAccountGuardian();
     _;
   }
 
@@ -44,34 +48,16 @@ contract Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initiali
     require(msg.sender == owner || msg.sender == address(this), 'only owner');
   }
 
-  modifier onlyAccountGuardian() {
-    _onlyAccountGuardian();
-    _;
-  }
-
   function _onlyAccountGuardian() internal view {
     require(accountGuardian != address(0), 'guardian not setup yet');
     require(msg.sender == accountGuardian, 'only guardian manager');
   }
 
-  /**
-   * execute a transaction (called directly from owner, or by entryPoint)
-   * @param dest destination address to call
-   * @param value the value to pass in this call
-   * @param func the calldata to pass in this call
-   */
   function execute(address dest, uint256 value, bytes calldata func) external {
     _requireFromEntryPointOrOwner();
     _call(dest, value, func);
   }
 
-  /**
-   * execute a sequence of transactions
-   * @dev to reduce gas consumption for trivial case (no value), use a zero-length array to mean zero value
-   * @param dest an array of destination addresses
-   * @param value an array of values to pass to each call. can be zero-length for no-value calls
-   * @param func an array of calldata to pass to each call
-   */
   function executeBatch(
     address[] calldata dest,
     uint256[] calldata value,
@@ -93,12 +79,6 @@ contract Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initiali
     }
   }
 
-  /**
-   * @dev The _entryPoint member is immutable, to reduce gas consumption.  To upgrade EntryPoint,
-   * a new implementation of Account must be deployed with the new EntryPoint address, then upgrading
-   * the implementation by calling `upgradeTo()`
-   * @param anOwner the owner (signer) of this account
-   */
   function initialize(address anOwner) public virtual initializer {
     _initialize(anOwner);
   }
@@ -108,7 +88,6 @@ contract Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initiali
     emit AccountInitialized(_entryPoint, owner);
   }
 
-  // Require the function call went through EntryPoint or owner
   function _requireFromEntryPointOrOwner() internal view {
     require(msg.sender == address(entryPoint()) || msg.sender == owner, 'not Owner or EntryPoint');
   }
@@ -119,14 +98,13 @@ contract Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initiali
     emit GuardianInitialized(_accountGuardian);
   }
 
-  /// implement template method of BaseAccount
   function _validateSignature(
-    PackedUserOperation calldata userOp,
+    UserOperation calldata userOp,
     bytes32 userOpHash
   ) internal virtual override returns (uint256 validationData) {
-    bytes32 hash = MessageHashUtils.toEthSignedMessageHash(userOpHash);
-    if (owner != ECDSA.recover(hash, userOp.signature)) return SIG_VALIDATION_FAILED;
-    return SIG_VALIDATION_SUCCESS;
+    bytes32 hash = userOpHash.toEthSignedMessageHash();
+    if (owner != hash.recover(userOp.signature)) return SIG_VALIDATION_FAILED;
+    return 0;
   }
 
   function _call(address target, uint256 value, bytes memory data) internal {
@@ -220,17 +198,5 @@ contract Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initiali
       }
     }
     return result;
-  }
-
-  /// @inheritdoc IAccount
-  function validateUserOp(
-    PackedUserOperation calldata userOp,
-    bytes32 userOpHash,
-    uint256 missingAccountFunds
-  ) external virtual override returns (uint256 validationData) {
-    _requireFromEntryPoint();
-    validationData = _validateSignature(userOp, userOpHash);
-    _validateNonce(userOp.nonce);
-    _payPrefund(missingAccountFunds);
   }
 }

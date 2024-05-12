@@ -9,8 +9,8 @@ import {
   Account__factory,
   HashGuardian,
   HashGuardian__factory,
-  SimpleEntryPoint,
-  SimpleEntryPoint__factory,
+  MockEntryPoint,
+  MockEntryPoint__factory,
 } from '../../typechain';
 import {
   generateCalldata,
@@ -32,7 +32,7 @@ describe('HashGuardian', function () {
   let account: Account;
   let accountOwner: Wallet = createAccountOwner();
   let accountFactory: AccountFactory;
-  let entryPoint: SimpleEntryPoint;
+  let entryPoint: MockEntryPoint;
   const etherSigner = ethers.provider.getSigner();
 
   const guardian1: Wallet = createAccountOwner();
@@ -51,7 +51,7 @@ describe('HashGuardian', function () {
   const hashGuardianInter = new Interface(HashGuardian__factory.abi);
 
   before(async () => {
-    entryPoint = await new SimpleEntryPoint__factory(etherSigner).deploy();
+    entryPoint = await new MockEntryPoint__factory(etherSigner).deploy();
     accountFactory = await new AccountFactory__factory(etherSigner).deploy(entryPoint.address);
     await accountFactory.createAccount(accountOwner.address, salt);
     let accountAddress = await accountFactory.getAddress(accountOwner.address, salt);
