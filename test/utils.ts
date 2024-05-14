@@ -1,6 +1,15 @@
 import { ecsign, keccak256 as keccak256_buffer, toRpcSig } from 'ethereumjs-util';
 import { BigNumber, Contract, Signer, Wallet } from 'ethers';
-import { arrayify, defaultAbiCoder, hexDataSlice, keccak256, parseEther } from 'ethers/lib/utils';
+import {
+  BytesLike,
+  Interface,
+  arrayify,
+  defaultAbiCoder,
+  hexConcat,
+  hexDataSlice,
+  keccak256,
+  parseEther,
+} from 'ethers/lib/utils';
 import { ethers } from 'hardhat';
 import {
   Account,
@@ -12,6 +21,7 @@ import {
 } from '../typechain';
 import { UserOperation } from './types';
 
+export const salt = '0x'.padEnd(66, '0');
 export const AddressZero = ethers.constants.AddressZero;
 export const HashZero = ethers.constants.HashZero;
 export const ONE_ETH = parseEther('1');
@@ -135,11 +145,8 @@ export function fillUserOpDefaults(
   defaults = DefaultsForUserOp
 ): UserOperation {
   const partial: any = { ...op };
-  // we want "item:undefined" to be used from defaults, and not override defaults, so we must explicitly
-  // remove those so "merge" will succeed.
   for (const key in partial) {
     if (partial[key] == null) {
-      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
       delete partial[key];
     }
   }
@@ -320,6 +327,7 @@ export async function sendEntryPoint(
 ) {
   const etherSigner = ethers.provider.getSigner();
   const queueUserOp = await fillAndSign(accountFactory, op, signer, entryPoint);
+  console.log('🚀 ~ queueUserOp:', queueUserOp);
   const signerAddress = await signer.getAddress();
   const tx = await entryPoint
     .connect(etherSigner)
@@ -329,11 +337,9 @@ export async function sendEntryPoint(
 }
 
 let counter = 0;
-// create non-random account, so gas calculations are deterministic
 export function createAccountOwner(): Wallet {
   const privateKey = keccak256(Buffer.from(arrayify(BigNumber.from(++counter))));
   return new ethers.Wallet(privateKey, ethers.provider);
-  // return new ethers.Wallet('0x'.padEnd(66, privkeyBase), ethers.provider);
 }
 
 export function createAddress(): string {
@@ -356,11 +362,7 @@ export async function createAccount(
   await accountFactory.createAccount(accountOwner, 0);
   const accountAddress = await accountFactory.getAddress(accountOwner, 0);
   const proxy = Account__factory.connect(accountAddress, ethersSigner);
-  return {
-    implementation,
-    accountFactory,
-    proxy,
-  };
+  return { implementation, accountFactory, proxy };
 }
 
 export function signUserOp(
@@ -374,10 +376,7 @@ export function signUserOp(
     Buffer.from('\x19Ethereum Signed Message:\n32', 'ascii'),
     Buffer.from(arrayify(message)),
   ]);
-
   const sig = ecsign(keccak256_buffer(msg1), Buffer.from(arrayify(signer.privateKey)));
-  // that's equivalent of:  await signer.signMessage(message);
-  // (but without "async"
   const signedMessage1 = toRpcSig(sig.v, sig.r, sig.s);
   return { ...op, signature: signedMessage1 };
 }
@@ -390,4 +389,9 @@ export async function getBalance(address: string): Promise<number> {
 export async function isDeployed(addr: string): Promise<boolean> {
   const code = await ethers.provider.getCode(addr);
   return code.length > 2;
+}
+
+export function getAccountInitCode(owner: string, salt: string, factoryAddress: string): BytesLike {
+  const _interface = new Interface(AccountFactory__factory.abi);
+  return hexConcat([factoryAddress, _interface.encodeFunctionData('createAccount', [owner, salt])]);
 }

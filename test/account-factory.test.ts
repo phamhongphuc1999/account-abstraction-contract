@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import { Wallet } from 'ethers';
 import { ethers } from 'hardhat';
 import {
@@ -6,8 +7,7 @@ import {
   EntryPoint,
   EntryPoint__factory,
 } from '../typechain';
-import { createAccountOwner } from './utils';
-import { expect } from 'chai';
+import { createAccountOwner, salt } from './utils';
 
 describe('AccountFactory', function () {
   const ethersSigner = ethers.provider.getSigner();
@@ -15,12 +15,10 @@ describe('AccountFactory', function () {
   let accountFactory: AccountFactory;
   let accountOwner: Wallet = createAccountOwner();
   let accountOwner2: Wallet = createAccountOwner();
-  let salt: string;
 
   before(async () => {
     entryPoint = await new EntryPoint__factory(ethersSigner).deploy();
     accountFactory = await new AccountFactory__factory(ethersSigner).deploy(entryPoint.address);
-    salt = '0x'.padEnd(66, '0');
   });
 
   it('Should create account', async function () {

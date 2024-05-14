@@ -4,9 +4,11 @@ import { parseEther } from 'ethers/lib/utils';
 import { ethers } from 'hardhat';
 import {
   Account,
+  AccountFactory,
   AccountFactory__factory,
   Account__factory,
   ERC1967Proxy__factory,
+  EntryPoint,
   TestCounter,
   TestCounter__factory,
   TestUtil,
@@ -20,33 +22,39 @@ import {
   createAccountOwner,
   createAddress,
   fillUserOpDefaults,
+  getAccountInitCode,
   getBalance,
   getUserOpHash,
   isDeployed,
   packUserOp,
+  salt,
+  sendEntryPoint,
   signUserOp,
 } from './utils';
+import { EntryPoint__factory } from '@account-abstraction/contracts';
 
 describe('Account', function () {
-  let entryPoint: string;
+  let entryPoint: EntryPoint;
+  let accountFactory: AccountFactory;
   let accounts: string[];
   let testUtil: TestUtil;
   let accountOwner: Wallet;
   const ethersSigner = ethers.provider.getSigner();
 
   before(async function () {
-    entryPoint = entryPoint = '0x'.padEnd(42, '2');
+    entryPoint = await new EntryPoint__factory(ethersSigner).deploy();
     accounts = await ethers.provider.listAccounts();
     if (accounts.length < 2) this.skip();
     testUtil = await new TestUtil__factory(ethersSigner).deploy();
     accountOwner = createAccountOwner();
+    accountFactory = await new AccountFactory__factory(ethersSigner).deploy(entryPoint.address);
   });
 
   it('owner should be able to call transfer', async () => {
     const { proxy: account } = await createAccount(
       ethers.provider.getSigner(),
       accounts[0],
-      entryPoint
+      entryPoint.address
     );
     await ethersSigner.sendTransaction({
       from: accounts[0],
@@ -60,7 +68,7 @@ describe('Account', function () {
     const { proxy: account } = await createAccount(
       ethers.provider.getSigner(),
       accounts[0],
-      entryPoint
+      entryPoint.address
     );
     await expect(
       account.connect(ethers.provider.getSigner(1)).execute(accounts[2], ONE_ETH, '0x')
@@ -80,7 +88,7 @@ describe('Account', function () {
       ({ proxy: account } = await createAccount(
         ethersSigner,
         await ethersSigner.getAddress(),
-        entryPoint
+        entryPoint.address
       ));
       counter = await new TestCounter__factory(ethersSigner).deploy();
     });
@@ -130,14 +138,11 @@ describe('Account', function () {
     let expectedPay: number;
 
     const actualGasPrice = 1e9;
-    // for testing directly validateUserOp, we initialize the account with EOA as entryPoint.
     let entryPointEoa: string;
 
     before(async () => {
       entryPointEoa = accounts[2];
       const epAsSigner = await ethers.getSigner(entryPointEoa);
-
-      // cant use "SimpleAccountFactory", since it attempts to increment nonce first
       const implementation = await new Account__factory(ethersSigner).deploy(entryPointEoa);
       const proxy = await new ERC1967Proxy__factory(ethersSigner).deploy(
         implementation.address,
@@ -170,7 +175,6 @@ describe('Account', function () {
       userOpHash = await getUserOpHash(userOp, entryPointEoa, chainId);
 
       expectedPay = actualGasPrice * (callGasLimit + verificationGasLimit);
-
       preBalance = await getBalance(account.address);
       const ret = await account.validateUserOp(userOp, userOpHash, expectedPay, {
         gasPrice: actualGasPrice,
@@ -197,7 +201,7 @@ describe('Account', function () {
   context('SimpleAccountFactory', () => {
     it('sanity: check deployer', async () => {
       const ownerAddr = createAddress();
-      const deployer = await new AccountFactory__factory(ethersSigner).deploy(entryPoint);
+      const deployer = await new AccountFactory__factory(ethersSigner).deploy(entryPoint.address);
       const target = await deployer.callStatic.createAccount(ownerAddr, 1234);
       expect(await isDeployed(target)).to.eq(false);
       await deployer.createAccount(ownerAddr, 1234);
