@@ -18,15 +18,13 @@ import {
   generateProof,
   verifyProof,
 } from '../circom-utils';
-import { AddressZero, createAccountOwner, fund, sendEntryPoint } from '../utils';
+import { AddressZero, createAccountOwner, fund, salt, sendEntryPoint } from '../utils';
 
 async function getEta() {
   const blockNumber = await ethers.provider.getBlockNumber();
   const block = await ethers.provider.getBlock(blockNumber);
   return block.timestamp + 1;
 }
-
-const salt = '0x'.padEnd(66, '0');
 
 describe('HashGuardian', function () {
   let account: Account;
@@ -93,6 +91,7 @@ describe('HashGuardian', function () {
       [_hash1, _hash2, _hash3],
       1,
       100000,
+      0,
     ]);
     callData = accountInter.encodeFunctionData('execute', [hashGuardian.address, 0, callData]);
     const _nonce = await entryPoint.getNonce(account.address, '0x0');

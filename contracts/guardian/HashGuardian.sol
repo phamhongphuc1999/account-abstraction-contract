@@ -68,7 +68,7 @@ contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureVal
     return (isCheck, _index);
   }
 
-  function getDepay() public view returns (uint256) {
+  function getDelay() public view returns (uint256) {
     return delay;
   }
 
@@ -120,7 +120,8 @@ contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureVal
   function setupGuardians(
     uint[] memory _guardians,
     uint256 _threshold,
-    uint256 _expirePeriod
+    uint256 _expirePeriod,
+    uint256 _delay
   ) public onlyOwner {
     require(threshold == 0, 'threshold must be equals 0 when initialize.');
     require(
@@ -138,6 +139,7 @@ contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureVal
     guardianCount = _guardians.length;
     threshold = _threshold;
     expirePeriod = _expirePeriod;
+    delay = _delay;
     emit ThresholdChanged(_threshold);
   }
 

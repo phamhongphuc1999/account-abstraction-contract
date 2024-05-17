@@ -5,6 +5,7 @@ import { ENTRYPOINT } from '../constants';
 
 async function main() {
   const AccountFactory = await ethers.getContractFactory('AccountFactory');
+  console.log('🚀 ~ main ~ ENTRYPOINT:', ENTRYPOINT);
   const accountFactory = await AccountFactory.deploy(ENTRYPOINT);
   await accountFactory.deployed();
 
@@ -12,7 +13,6 @@ async function main() {
     accountFactoryAddress: accountFactory.address,
   };
 
-  console.log('network config', network.config);
   const networkName = network.name;
   const fileName = `${Date.now()}_${networkName}_addresses.json`;
   writeFileSync(resolve(`./scripts/${fileName}`), JSON.stringify(deployedAddresses), 'utf-8');

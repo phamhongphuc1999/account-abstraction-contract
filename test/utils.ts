@@ -270,12 +270,12 @@ export async function fillUserOp(
   }
   if (op1.callGasLimit == null && op.callData != null) {
     if (provider == null) throw new Error('must have entryPoint for callGasLimit estimate');
-    const gasEtimated = await provider.estimateGas({
+    const estimatedGas = await provider.estimateGas({
       from: entryPoint?.address,
       to: op1.sender,
       data: op1.callData,
     });
-    op1.callGasLimit = gasEtimated; // .add(55000)
+    op1.callGasLimit = estimatedGas; // .add(55000)
   }
   if (op1.maxFeePerGas == null) {
     if (provider == null) throw new Error('must have entryPoint to autofill maxFeePerGas');
@@ -327,7 +327,6 @@ export async function sendEntryPoint(
 ) {
   const etherSigner = ethers.provider.getSigner();
   const queueUserOp = await fillAndSign(accountFactory, op, signer, entryPoint);
-  console.log('🚀 ~ queueUserOp:', queueUserOp);
   const signerAddress = await signer.getAddress();
   const tx = await entryPoint
     .connect(etherSigner)
