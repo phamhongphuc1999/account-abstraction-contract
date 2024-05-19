@@ -5,7 +5,6 @@ import { ENTRYPOINT } from '../constants';
 
 async function main() {
   const AccountFactory = await ethers.getContractFactory('AccountFactory');
-  console.log('🚀 ~ main ~ ENTRYPOINT:', ENTRYPOINT);
   const accountFactory = await AccountFactory.deploy(ENTRYPOINT);
   await accountFactory.deployed();
 

@@ -85,6 +85,7 @@ describe('HashGuardian', function () {
     hashGuardian = (await ethers.getContractAt('HashGuardian', managerAddress)) as HashGuardian;
     expect(await hashGuardian.owner()).to.be.eq(accountOwner.address);
     expect(await hashGuardian.account()).to.be.eq(account.address);
+    expect(await hashGuardian.maxGuardians()).to.be.eq(5);
   });
   it('Should setup guardians', async function () {
     let callData = hashGuardianInter.encodeFunctionData('setupGuardians', [
@@ -106,10 +107,12 @@ describe('HashGuardian', function () {
     expect(await hashGuardian.guardians(0)).to.be.eq(_hash1);
     expect(await hashGuardian.guardians(1)).to.be.eq(_hash2);
     expect(await hashGuardian.guardians(2)).to.be.eq(_hash3);
+    expect(await hashGuardian.guardians(3)).to.be.eq(0);
+    expect(await hashGuardian.guardians(4)).to.be.eq(0);
   });
   it('Should set threshold', async function () {
     // create setThreshold callData
-    let createThresholdCalldata = await hashGuardianInter.encodeFunctionData('setThreshold', [2]);
+    let createThresholdCalldata = hashGuardianInter.encodeFunctionData('setThreshold', [2]);
     const eta = await getEta();
     let _callData = hashGuardianInter.encodeFunctionData('queue', [
       0,
@@ -221,6 +224,11 @@ describe('HashGuardian', function () {
     expect(_result[0]).to.be.eq(true);
     expect(_result[1]).to.be.eq(3);
     expect(await hashGuardian.guardianCount()).to.be.eq(4);
+    expect(await hashGuardian.guardians(0)).to.be.eq(_hash1);
+    expect(await hashGuardian.guardians(1)).to.be.eq(_hash2);
+    expect(await hashGuardian.guardians(2)).to.be.eq(_hash3);
+    expect(await hashGuardian.guardians(3)).to.be.eq(_hash4);
+    expect(await hashGuardian.guardians(4)).to.be.eq(0);
   });
   it('Should remove guardian', async function () {
     // create removeGuardian callData
@@ -258,6 +266,11 @@ describe('HashGuardian', function () {
     expect(_result[0]).to.be.eq(false);
     expect(_result[1]).to.be.eq(0);
     expect(await hashGuardian.guardianCount()).to.be.eq(3);
+    expect(await hashGuardian.guardians(0)).to.be.eq(_hash1);
+    expect(await hashGuardian.guardians(1)).to.be.eq(_hash2);
+    expect(await hashGuardian.guardians(2)).to.be.eq(_hash4);
+    expect(await hashGuardian.guardians(3)).to.be.eq(0);
+    expect(await hashGuardian.guardians(4)).to.be.eq(0);
   });
   it('Should change owner', async function () {
     const newOwner = createAccountOwner();
@@ -278,13 +291,13 @@ describe('HashGuardian', function () {
       entryPoint
     );
     expect(await hashGuardian._tempNewOwner()).to.be.eq(newOwner.address);
-    // comfirm change new owner
+    // confirm change new owner
     let _proof = await generateProof(guardian1.address);
     let _verify = await verifyProof(_proof.proof, _proof.publicSignals);
     expect(_verify).to.be.true;
     if (_verify) {
       const { pA, pB, pC, pubSignals } = await generateCalldata(_proof.proof, _proof.publicSignals);
-      const _comfirmCalldata = hashGuardianInter.encodeFunctionData('comfirmChangeOwner', [
+      const _confirmCalldata = hashGuardianInter.encodeFunctionData('confirmChangeOwner', [
         pA,
         pB,
         pC,
@@ -293,7 +306,7 @@ describe('HashGuardian', function () {
       let _callData = accountInter.encodeFunctionData('execute', [
         hashGuardian.address,
         0,
-        _comfirmCalldata,
+        _confirmCalldata,
       ]);
       let _nonce = await entryPoint.getNonce(account.address, '0x0');
       await sendEntryPoint(
@@ -302,8 +315,8 @@ describe('HashGuardian', function () {
         accountOwner,
         entryPoint
       );
-      expect(await hashGuardian.comfirms(_hash1)).to.be.true;
-      expect(await hashGuardian.isEnoughComfirm()).to.be.false;
+      expect(await hashGuardian.confirms(_hash1)).to.be.true;
+      expect(await hashGuardian.isEnoughConfirm()).to.be.false;
     }
 
     _proof = await generateProof(guardian2.address);
@@ -311,7 +324,7 @@ describe('HashGuardian', function () {
     expect(_verify).to.be.true;
     if (_verify) {
       const { pA, pB, pC, pubSignals } = await generateCalldata(_proof.proof, _proof.publicSignals);
-      const _comfirmCalldata = hashGuardianInter.encodeFunctionData('comfirmChangeOwner', [
+      const _confirmCalldata = hashGuardianInter.encodeFunctionData('confirmChangeOwner', [
         pA,
         pB,
         pC,
@@ -320,7 +333,7 @@ describe('HashGuardian', function () {
       let _callData = accountInter.encodeFunctionData('execute', [
         hashGuardian.address,
         0,
-        _comfirmCalldata,
+        _confirmCalldata,
       ]);
       let _nonce = await entryPoint.getNonce(account.address, '0x0');
       await sendEntryPoint(
@@ -329,8 +342,8 @@ describe('HashGuardian', function () {
         accountOwner,
         entryPoint
       );
-      expect(await hashGuardian.comfirms(_hash2)).to.be.true;
-      expect(await hashGuardian.isEnoughComfirm()).to.be.true;
+      expect(await hashGuardian.confirms(_hash2)).to.be.true;
+      expect(await hashGuardian.isEnoughConfirm()).to.be.true;
     }
     // change owner
     const oldOwner = await account.owner();
@@ -357,9 +370,9 @@ describe('HashGuardian', function () {
     expect(_guardianOwnerAddress).to.be.eq(newOwner.address);
     const _tempNewOwner = await hashGuardian._tempNewOwner();
     expect(_tempNewOwner).to.be.eq(AddressZero);
-    const _cHash1 = await hashGuardian.comfirms(_hash1);
+    const _cHash1 = await hashGuardian.confirms(_hash1);
     expect(_cHash1).to.be.false;
-    const _cHash2 = await hashGuardian.comfirms(_hash2);
+    const _cHash2 = await hashGuardian.confirms(_hash2);
     expect(_cHash2).to.be.false;
   });
 });

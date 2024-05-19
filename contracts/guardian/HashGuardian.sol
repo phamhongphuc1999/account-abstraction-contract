@@ -21,11 +21,12 @@ contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureVal
   Account public account;
   uint256 public threshold;
   uint256 public guardianCount;
-  uint256 private delay;
-  uint256 private expirePeriod;
-  uint[] public guardians;
+  uint256 public constant maxGuardians = 5;
+  uint256 public delay;
+  uint256 public expirePeriod;
+  uint[maxGuardians] public guardians;
   address public _tempNewOwner;
-  mapping(uint => bool) public comfirms;
+  mapping(uint => bool) public confirms;
   OwnerTransaction[] public ownerTransactions;
 
   event GuardianAdded(uint indexed guardian);
@@ -55,10 +56,9 @@ contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureVal
   }
 
   function guardianIndex(uint _guardian) public view returns (bool, uint256) {
-    uint256 _len = guardians.length;
     bool isCheck = false;
     uint256 _index = 0;
-    for (uint256 i = 0; i < _len; i++) {
+    for (uint256 i = 0; i < guardianCount; i++) {
       if (_guardian == guardians[i]) {
         isCheck = true;
         _index = i;
@@ -68,24 +68,18 @@ contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureVal
     return (isCheck, _index);
   }
 
-  function getDelay() public view returns (uint256) {
-    return delay;
-  }
-
   function getOwnerTransactionCount() public view returns (uint256) {
     return ownerTransactions.length;
   }
 
-  function resetComfirm() internal onlyOwner {
-    uint256 _len = guardians.length;
-    for (uint256 i = 0; i < _len; i++) comfirms[guardians[i]] = false;
+  function resetConfirm() internal onlyOwner {
+    for (uint256 i = 0; i < guardianCount; i++) confirms[guardians[i]] = false;
   }
 
-  function isEnoughComfirm() public view returns (bool) {
-    uint256 _len = guardians.length;
+  function isEnoughConfirm() public view returns (bool) {
     uint256 counter = 0;
-    for (uint256 i = 0; i < _len; i++) {
-      if (comfirms[guardians[i]]) counter = counter + 1;
+    for (uint256 i = 0; i < guardianCount; i++) {
+      if (confirms[guardians[i]]) counter = counter + 1;
     }
     return counter >= threshold;
   }
@@ -95,26 +89,26 @@ contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureVal
     _tempNewOwner = _newOwner;
   }
 
-  function comfirmChangeOwner(
+  function confirmChangeOwner(
     uint[2] calldata _pA,
     uint[2][2] calldata _pB,
     uint[2] calldata _pC,
     uint[2] calldata _pubSignals
   ) external payable onlyGuardian(_pubSignals[1]) {
-    bool isEnough = isEnoughComfirm();
-    require(!isEnough, "enough already, i shouldn't comfirm");
+    bool isEnough = isEnoughConfirm();
+    require(!isEnough, "enough already, i shouldn't confirm");
     bool isValid = verifyProof(_pA, _pB, _pC, _pubSignals);
     require(isValid, 'Proof is invalid');
-    comfirms[_pubSignals[1]] = true;
+    confirms[_pubSignals[1]] = true;
   }
 
   function changeOwner(AccountFactory accountFactory) public payable {
-    bool isEnough = isEnoughComfirm();
-    require(isEnough, 'you must have enough guardian comfirm');
+    bool isEnough = isEnoughConfirm();
+    require(isEnough, 'you must have enough guardian confirm');
     account.changeOwner(accountFactory, _tempNewOwner);
     owner = _tempNewOwner;
     _tempNewOwner = address(0);
-    resetComfirm();
+    resetConfirm();
   }
 
   function setupGuardians(
@@ -124,16 +118,21 @@ contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureVal
     uint256 _delay
   ) public onlyOwner {
     require(threshold == 0, 'threshold must be equals 0 when initialize.');
+    uint256 _guardianLen = _guardians.length;
     require(
-      _threshold > 0 && _threshold <= _guardians.length,
-      'threshold must be greaster than 0 and less than or equal to _guardians.length'
+      _threshold > 0 && _threshold <= _guardianLen,
+      'threshold must be greaster than 0 and less than or equal to number of guardians'
     );
-    for (uint256 i = 0; i < _guardians.length; i++) {
+    require(
+      _guardianLen <= maxGuardians,
+      'number of guardians must be less than or equal maxGuardians'
+    );
+    for (uint256 i = 0; i < _guardianLen; i++) {
       uint guardian = _guardians[i];
       require(guardian != 0, 'invalid guardian address.');
       (bool isCheck, ) = guardianIndex(guardian);
       require(!isCheck, 'guardian already existed.');
-      guardians.push(guardian);
+      guardians[i] = guardian;
       emit GuardianAdded(guardian);
     }
     guardianCount = _guardians.length;
@@ -158,7 +157,8 @@ contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureVal
     require(_guardian != 0, 'invalid guardian address.');
     (bool isCheck, ) = guardianIndex(_guardian);
     require(!isCheck, 'guardian already existed.');
-    guardians.push(_guardian);
+    require(guardianCount < maxGuardians, 'guardian is full');
+    guardians[guardianCount] = _guardian;
     guardianCount += 1;
     emit GuardianAdded(_guardian);
   }
@@ -169,10 +169,13 @@ contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureVal
     (bool isCheck, uint256 _index) = guardianIndex(_guardian);
     require(isCheck, 'guardian not existed.');
     require(
-      guardianCount > threshold,
+      guardians.length > threshold,
       'number of guardians after removed must larger or equal to threshold.'
     );
-    delete guardians[_index];
+    for (uint256 i = _index; i < guardianCount - 1; i++) {
+      guardians[i] = guardians[i + 1];
+    }
+    guardians[guardianCount - 1] = 0;
     guardianCount -= 1;
     emit GuardianRemoved(_guardian);
   }
