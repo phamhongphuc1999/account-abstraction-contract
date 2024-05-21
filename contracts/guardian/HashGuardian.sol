@@ -72,7 +72,7 @@ contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureVal
     return ownerTransactions.length;
   }
 
-  function resetConfirm() internal onlyOwner {
+  function resetConfirm() internal {
     for (uint256 i = 0; i < guardianCount; i++) confirms[guardians[i]] = false;
   }
 
@@ -96,7 +96,8 @@ contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureVal
     uint[2] calldata _pubSignals
   ) external payable onlyGuardian(_pubSignals[1]) {
     bool isEnough = isEnoughConfirm();
-    require(!isEnough, "enough already, i shouldn't confirm");
+    require(!isEnough, "enough already, you shouldn't confirm");
+    require(!confirms[_pubSignals[1]], 'already confirmed');
     bool isValid = verifyProof(_pA, _pB, _pC, _pubSignals);
     require(isValid, 'Proof is invalid');
     confirms[_pubSignals[1]] = true;
@@ -148,6 +149,7 @@ contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureVal
       _threshold > 0 && _threshold <= guardianCount,
       '_threshold must be bigger than 0 and smaller or equals to current number of guardians.'
     );
+    require(_tempNewOwner == address(0), 'change owner is in process, please finish it first');
     threshold = _threshold;
     emit ThresholdChanged(_threshold);
   }
@@ -155,6 +157,7 @@ contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureVal
   function addGuardian(uint _guardian) external onlyOwner {
     require(threshold > 0, "threshold haven't been setup yet.");
     require(_guardian != 0, 'invalid guardian address.');
+    require(_tempNewOwner == address(0), 'change owner is in process, please finish it first');
     (bool isCheck, ) = guardianIndex(_guardian);
     require(!isCheck, 'guardian already existed.');
     require(guardianCount < maxGuardians, 'guardian is full');
@@ -166,6 +169,7 @@ contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureVal
   function removeGuardian(uint _guardian) external onlyOwner {
     require(threshold > 0, "threshold haven't been setup yet.");
     require(_guardian != 0, 'invalid guardian address.');
+    require(_tempNewOwner == address(0), 'change owner is in process, please finish it first');
     (bool isCheck, uint256 _index) = guardianIndex(_guardian);
     require(isCheck, 'guardian not existed.');
     require(

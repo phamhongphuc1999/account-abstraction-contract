@@ -1,10 +1,10 @@
+import { EntryPoint__factory } from '@account-abstraction/contracts';
 import { expect } from 'chai';
 import { Wallet } from 'ethers';
 import { parseEther } from 'ethers/lib/utils';
 import { ethers } from 'hardhat';
 import {
   Account,
-  AccountFactory,
   AccountFactory__factory,
   Account__factory,
   ERC1967Proxy__factory,
@@ -22,20 +22,15 @@ import {
   createAccountOwner,
   createAddress,
   fillUserOpDefaults,
-  getAccountInitCode,
   getBalance,
   getUserOpHash,
   isDeployed,
   packUserOp,
-  salt,
-  sendEntryPoint,
   signUserOp,
 } from './utils';
-import { EntryPoint__factory } from '@account-abstraction/contracts';
 
 describe('Account', function () {
   let entryPoint: EntryPoint;
-  let accountFactory: AccountFactory;
   let accounts: string[];
   let testUtil: TestUtil;
   let accountOwner: Wallet;
@@ -47,7 +42,6 @@ describe('Account', function () {
     if (accounts.length < 2) this.skip();
     testUtil = await new TestUtil__factory(ethersSigner).deploy();
     accountOwner = createAccountOwner();
-    accountFactory = await new AccountFactory__factory(ethersSigner).deploy(entryPoint.address);
   });
 
   it('owner should be able to call transfer', async () => {
