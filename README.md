@@ -85,3 +85,9 @@ make proof name=circom-file-name
 ```shell
 make verify
 ```
+
+## Run circom test
+
+```shell
+yarn circomtest
+```

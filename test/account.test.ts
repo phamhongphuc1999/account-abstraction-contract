@@ -167,7 +167,6 @@ describe('Account', function () {
       );
 
       userOpHash = await getUserOpHash(userOp, entryPointEoa, chainId);
-
       expectedPay = actualGasPrice * (callGasLimit + verificationGasLimit);
       preBalance = await getBalance(account.address);
       const ret = await account.validateUserOp(userOp, userOpHash, expectedPay, {
