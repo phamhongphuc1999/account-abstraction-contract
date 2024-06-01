@@ -1,9 +1,8 @@
+import { buildPoseidon } from 'circomlibjs';
 import { BigNumberish } from 'ethers';
 import { readFileSync } from 'fs';
 import { Groth16Proof, PublicSignals, groth16 } from 'snarkjs';
 import { PromiseOrValue } from '../typechain/common';
-
-const buildPoseidon = require('circomlibjs').buildPoseidon;
 
 export async function generatePoseidonHash(
   _address: string,

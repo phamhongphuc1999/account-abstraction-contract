@@ -22,13 +22,7 @@ export async function debugTransaction(
   disableStorage = true
 ): Promise<DebugTransactionResult> {
   const debugTx = async (hash: string): Promise<DebugTransactionResult> =>
-    await ethers.provider.send('debug_traceTransaction', [
-      hash,
-      {
-        disableMemory,
-        disableStorage,
-      },
-    ]);
+    await ethers.provider.send('debug_traceTransaction', [hash, { disableMemory, disableStorage }]);
 
   return await debugTx(txHash);
 }
