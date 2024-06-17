@@ -25,11 +25,11 @@ contract SimpleHashGuardian is Verifier {
     uint[2] calldata _pA,
     uint[2][2] calldata _pB,
     uint[2] calldata _pC,
-    uint[256] calldata _pubSignals
+    uint[1] calldata _pubSignals
   ) external payable {
     bool isValid = verifyProof(_pA, _pB, _pC, _pubSignals);
     require(isValid, 'Proof is invalid');
-    require(guardians[_pubSignals[1]], "Verifier isn't a guardian");
+    require(guardians[_pubSignals[0]], "Verifier isn't a guardian");
     counter += 1;
   }
 }

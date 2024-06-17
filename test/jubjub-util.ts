@@ -23,6 +23,20 @@ function buffer2bits(buff: Uint8Array) {
   return res;
 }
 
+export function convertBigIntsToNumber(
+  _in: bigint[],
+  _len: number,
+  mode: 'normal' | 'hex' = 'normal'
+) {
+  let result: bigint = BigInt('0');
+  let e2 = BigInt('1');
+  for (let i = 0; i < _len; i++) {
+    result += _in[i] * e2;
+    e2 = e2 + e2;
+  }
+  return mode == 'normal' ? result.toString(16) : `0x${result.toString(16)}`;
+}
+
 export async function generateWitness(message: string, privateKey: Uint8Array) {
   const eddsa = await buildEddsa();
   const babyJub = await buildBabyjub();
@@ -70,7 +84,7 @@ interface ReturnType {
     [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ];
   pC: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>];
-  pubSignals: Array<PromiseOrValue<BigNumberish>>;
+  pubSignals: [PromiseOrValue<BigNumberish>];
 }
 export async function generateCalldata(
   proof: Groth16Proof,

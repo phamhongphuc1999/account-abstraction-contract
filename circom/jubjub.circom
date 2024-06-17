@@ -1,6 +1,7 @@
 pragma circom 2.0.0;
 
 include "../node_modules/circomlib/circuits/eddsa.circom";
+include "../node_modules/circomlib/circuits/bitify.circom";
 
 template Jubjub(n) {
   signal input msg[n];
@@ -12,16 +13,15 @@ template Jubjub(n) {
   signal output out;
 
   component verifier = EdDSAVerifier(n);
+  component bitToNum = Bits2Num(256);
+
+  bitToNum.in <== A;
+  out <== bitToNum.out;
   
   verifier.msg <== msg;
   verifier.A <== A;
   verifier.R8 <== R8;
   verifier.S <== S;
-
-  out <== 0;
-  for (var i = 0; i < 256; i++) {
-    out <== out * 10 + A[i];
-  }
 }
 
-component main {public [A]} = Jubjub(80);
+component main = Jubjub(80);
