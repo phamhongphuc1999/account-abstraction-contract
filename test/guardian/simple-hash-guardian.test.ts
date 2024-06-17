@@ -1,30 +1,25 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { SimpleHashGuardian, SimpleHashGuardian__factory } from '../../typechain';
-import {
-  generateCalldata,
-  generatePoseidonHash,
-  generateProof,
-  verifyProof,
-} from '../circom-utils';
+import { convertStringToUint8, generateWitness } from '../jubjub-util';
 
 describe('SimpleHashGuardian', function () {
   let simpleHashGuardian: SimpleHashGuardian;
   const etherSigner = ethers.provider.getSigner();
-  const _account1 = '0x9A85752B25Cb26a1E42f8E095588e4647859Bc36';
-  const _account2 = '0xac7367fe5423f5134039b446D4B9dD9C06f57826';
-  const _account3 = '0x0E043E83C116546737b49d0887d6CCe29f7bFD4d';
-  const _account4 = '0xeea17fC3a6078895ec5BA4Ef4158860f5303bD2A';
+  const _privateKey1 = 'fc0a5f8f953abdc85301347c264cdbec92ace822a197499492316b337e8684b5';
+  const _privateKey2 = 'deea921bccc87954c9d8707a2a9fe6accf39742da61ac8acc5c9b8f242c279aa';
+  const _privateKey3 = '900a63747266d836e4c122a1b3f2c14d585494cd6cf7efafe0bc0b030965e974';
+  const _privateKey4 = '1108986958552e0058997f92b0d38eb79096abab134e761fdc03ba323ae5fef8';
 
-  let _hash1 = '';
-  let _hash2 = '';
-  let _hash3 = '';
+  let _proof1;
+  let _proof2;
+  let _proof3;
 
   before(async () => {
     simpleHashGuardian = await new SimpleHashGuardian__factory(etherSigner).deploy();
-    _hash1 = await generatePoseidonHash(_account1, 'hex');
-    _hash2 = await generatePoseidonHash(_account2, 'hex');
-    _hash3 = await generatePoseidonHash(_account3, 'hex');
+    _proof1 = await generateWitness('01234567890123456789', convertStringToUint8(_privateKey1));
+    _proof2 = await generateWitness('01234567890123456789', convertStringToUint8(_privateKey2));
+    _proof3 = await generateWitness('01234567890123456789', convertStringToUint8(_privateKey3));
   });
 
   it('Should add guardians', async function () {

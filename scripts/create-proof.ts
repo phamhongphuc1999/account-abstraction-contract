@@ -1,4 +1,4 @@
-import { generateCalldata, generateProof, verifyProof } from '../test/circom-utils';
+import { generateCalldata, generateProof, verifyProof } from '../test/poseidon-utils';
 
 async function main() {
   const account = '0x871DBcE2b9923A35716e7E83ee402B535298538E';

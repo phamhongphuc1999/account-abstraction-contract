@@ -17,7 +17,7 @@ import {
   generatePoseidonHash,
   generateProof,
   verifyProof,
-} from '../circom-utils';
+} from '../poseidon-utils';
 import { AddressZero, createAccountOwner, fund, salt, sendEntryPoint } from '../utils';
 
 async function getEta() {

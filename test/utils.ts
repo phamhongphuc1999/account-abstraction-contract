@@ -1,5 +1,5 @@
 import { ecsign, keccak256 as keccak256_buffer, toRpcSig } from 'ethereumjs-util';
-import { BigNumber, BigNumberish, Contract, ContractReceipt, Signer, Wallet } from 'ethers';
+import { BigNumber, Contract, Signer, Wallet } from 'ethers';
 import {
   BytesLike,
   Interface,
@@ -17,12 +17,9 @@ import {
   AccountFactory__factory,
   Account__factory,
   ERC1967Proxy__factory,
-  IERC20,
   MockEntryPoint,
 } from '../typechain';
 import { UserOperation } from './types';
-import { debugTransaction } from './debugTx';
-import { expect } from 'chai';
 
 export const salt = '0x'.padEnd(66, '0');
 export const AddressZero = ethers.constants.AddressZero;
@@ -396,90 +393,4 @@ export async function isDeployed(addr: string): Promise<boolean> {
 export function getAccountInitCode(owner: string, salt: string, factoryAddress: string): BytesLike {
   const _interface = new Interface(AccountFactory__factory.abi);
   return hexConcat([factoryAddress, _interface.encodeFunctionData('createAccount', [owner, salt])]);
-}
-
-let currentNode: string = '';
-export async function checkForGeth(): Promise<void> {
-  // @ts-ignore
-  const provider = ethers.provider._hardhatProvider;
-  currentNode = await provider.request({ method: 'web3_clientVersion' });
-
-  console.log('node version:', currentNode);
-  // NOTE: must run geth with params:
-  // --http.api personal,eth,net,web3
-  // --allow-insecure-unlock
-  if (currentNode.match(/geth/i) != null) {
-    for (let i = 0; i < 2; i++) {
-      const acc = await provider
-        .request({ method: 'personal_newAccount', params: ['pass'] })
-        .catch(rethrow);
-      await provider
-        .request({ method: 'personal_unlockAccount', params: [acc, 'pass'] })
-        .catch(rethrow);
-      await fund(acc, '10');
-    }
-  }
-}
-
-export async function checkForBannedOps(txHash: string, checkPaymaster: boolean): Promise<void> {
-  const tx = await debugTransaction(txHash);
-  const logs = tx.structLogs;
-  const blockHash = logs
-    .map((op, index) => ({ op: op.op, index }))
-    .filter((op) => op.op === 'NUMBER');
-  expect(blockHash.length).to.equal(
-    2,
-    'expected exactly 2 call to NUMBER (Just before and after validateUserOperation)'
-  );
-  const validateAccountOps = logs.slice(0, blockHash[0].index - 1);
-  const validatePaymasterOps = logs.slice(blockHash[0].index + 1);
-  const ops = validateAccountOps.filter((log) => log.depth > 1).map((log) => log.op);
-  const paymasterOps = validatePaymasterOps.filter((log) => log.depth > 1).map((log) => log.op);
-
-  expect(ops).to.include('POP', 'not a valid ops list: ' + JSON.stringify(ops)); // sanity
-  const bannedOpCodes = new Set(['GAS', 'BASEFEE', 'GASPRICE', 'NUMBER']);
-  expect(
-    ops.filter((op, index) => {
-      // don't ban "GAS" op followed by "*CALL"
-      if (op === 'GAS' && ops[index + 1].match(/CALL/) != null) {
-        return false;
-      }
-      return bannedOpCodes.has(op);
-    })
-  ).to.eql([]);
-  if (checkPaymaster) {
-    expect(paymasterOps).to.include('POP', 'not a valid ops list: ' + JSON.stringify(paymasterOps)); // sanity
-    expect(paymasterOps).to.not.include('BASEFEE');
-    expect(paymasterOps).to.not.include('GASPRICE');
-    expect(paymasterOps).to.not.include('NUMBER');
-  }
-}
-
-export async function calcGasUsage(
-  rcpt: ContractReceipt,
-  entryPoint: MockEntryPoint,
-  beneficiaryAddress?: string
-): Promise<{ actualGasCost: BigNumberish }> {
-  const actualGas = await rcpt.gasUsed;
-  const logs = await entryPoint.queryFilter(
-    entryPoint.filters.UserOperationEvent(),
-    rcpt.blockHash
-  );
-  const { actualGasCost, actualGasUsed } = logs[0].args;
-  console.log('\t== actual gasUsed (from tx receipt)=', actualGas.toString());
-  console.log('\t== calculated gasUsed (paid to beneficiary)=', actualGasUsed);
-  const tx = await ethers.provider.getTransaction(rcpt.transactionHash);
-  console.log(
-    '\t== gasDiff',
-    actualGas.toNumber() - actualGasUsed.toNumber() - callDataCost(tx.data)
-  );
-  if (beneficiaryAddress != null) {
-    expect(await getBalance(beneficiaryAddress)).to.eq(actualGasCost.toNumber());
-  }
-  return { actualGasCost };
-}
-
-export async function getTokenBalance(token: IERC20, address: string): Promise<number> {
-  const balance = await token.balanceOf(address);
-  return parseInt(balance.toString());
 }

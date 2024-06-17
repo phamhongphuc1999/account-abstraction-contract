@@ -93,7 +93,7 @@ contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureVal
     uint[2] calldata _pA,
     uint[2][2] calldata _pB,
     uint[2] calldata _pC,
-    uint[2] calldata _pubSignals
+    uint[256] calldata _pubSignals
   ) external payable onlyGuardian(_pubSignals[1]) {
     bool isEnough = isEnoughConfirm();
     require(!isEnough, "enough already, you shouldn't confirm");
