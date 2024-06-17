@@ -93,14 +93,14 @@ contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureVal
     uint[2] calldata _pA,
     uint[2][2] calldata _pB,
     uint[2] calldata _pC,
-    uint[2] calldata _pubSignals
-  ) external payable onlyGuardian(_pubSignals[1]) {
+    uint[1] calldata _pubSignals
+  ) external payable onlyGuardian(_pubSignals[0]) {
     bool isEnough = isEnoughConfirm();
     require(!isEnough, "enough already, you shouldn't confirm");
-    require(!confirms[_pubSignals[1]], 'already confirmed');
+    require(!confirms[_pubSignals[0]], 'already confirmed');
     bool isValid = verifyProof(_pA, _pB, _pC, _pubSignals);
     require(isValid, 'Proof is invalid');
-    confirms[_pubSignals[1]] = true;
+    confirms[_pubSignals[0]] = true;
   }
 
   function changeOwner(AccountFactory accountFactory) public payable {

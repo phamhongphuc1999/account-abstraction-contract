@@ -13,11 +13,13 @@ import {
   MockEntryPoint__factory,
 } from '../../typechain';
 import {
+  convertBigIntsToNumber,
+  convertStringToUint8,
   generateCalldata,
-  generatePoseidonHash,
   generateProof,
+  generateWitness,
   verifyProof,
-} from '../circom-utils';
+} from '../jubjub-util';
 import { AddressZero, createAccountOwner, fund, salt, sendEntryPoint } from '../utils';
 
 async function getEta() {
@@ -25,6 +27,14 @@ async function getEta() {
   const block = await ethers.provider.getBlock(blockNumber);
   return block.timestamp + 1;
 }
+
+interface ProofType {
+  A: bigint[];
+  R8: bigint[];
+  S: bigint[];
+  msg: bigint[];
+}
+const message = '01234567890123456789';
 
 describe('HashGuardian', function () {
   let account: Account;
@@ -38,10 +48,20 @@ describe('HashGuardian', function () {
   const guardian3: Wallet = createAccountOwner();
   const guardian4: Wallet = createAccountOwner();
 
-  let _hash1 = '';
-  let _hash2 = '';
-  let _hash3 = '';
-  let _hash4 = '';
+  const _privateKey1 = 'fc0a5f8f953abdc85301347c264cdbec92ace822a197499492316b337e8684b5';
+  const _privateKey2 = 'deea921bccc87954c9d8707a2a9fe6accf39742da61ac8acc5c9b8f242c279aa';
+  const _privateKey3 = '900a63747266d836e4c122a1b3f2c14d585494cd6cf7efafe0bc0b030965e974';
+  const _privateKey4 = '1108986958552e0058997f92b0d38eb79096abab134e761fdc03ba323ae5fef8';
+
+  let _proof1: ProofType;
+  let _proof2: ProofType;
+  let _proof3: ProofType;
+  let _proof4: ProofType;
+
+  let _hash1: string;
+  let _hash2: string;
+  let _hash3: string;
+  let _hash4: string;
 
   let hashGuardian: HashGuardian;
 
@@ -55,10 +75,14 @@ describe('HashGuardian', function () {
     let accountAddress = await accountFactory.getAddress(accountOwner.address, salt);
     account = (await ethers.getContractAt('Account', accountAddress, etherSigner)) as Account;
 
-    _hash1 = await generatePoseidonHash(guardian1.address, 'hex');
-    _hash2 = await generatePoseidonHash(guardian2.address, 'hex');
-    _hash3 = await generatePoseidonHash(guardian3.address, 'hex');
-    _hash4 = await generatePoseidonHash(guardian4.address, 'hex');
+    _proof1 = await generateWitness(message, convertStringToUint8(_privateKey1));
+    _proof2 = await generateWitness(message, convertStringToUint8(_privateKey2));
+    _proof3 = await generateWitness(message, convertStringToUint8(_privateKey3));
+    _proof4 = await generateWitness(message, convertStringToUint8(_privateKey4));
+    _hash1 = convertBigIntsToNumber(_proof1.A, 256, 'hex');
+    _hash2 = convertBigIntsToNumber(_proof2.A, 256, 'hex');
+    _hash3 = convertBigIntsToNumber(_proof3.A, 256, 'hex');
+    _hash4 = convertBigIntsToNumber(_proof4.A, 256, 'hex');
 
     await fund(accountOwner.address, '1000');
     await fund(account.address, '1000');
@@ -292,7 +316,7 @@ describe('HashGuardian', function () {
     );
     expect(await hashGuardian._tempNewOwner()).to.be.eq(newOwner.address);
     // confirm change new owner
-    let _proof = await generateProof(guardian1.address);
+    let _proof = await generateProof(message, convertStringToUint8(_privateKey1));
     let _verify = await verifyProof(_proof.proof, _proof.publicSignals);
     expect(_verify).to.be.true;
     if (_verify) {
@@ -319,7 +343,7 @@ describe('HashGuardian', function () {
       expect(await hashGuardian.isEnoughConfirm()).to.be.false;
     }
 
-    _proof = await generateProof(guardian2.address);
+    _proof = await generateProof(message, convertStringToUint8(_privateKey4));
     _verify = await verifyProof(_proof.proof, _proof.publicSignals);
     expect(_verify).to.be.true;
     if (_verify) {
@@ -342,7 +366,7 @@ describe('HashGuardian', function () {
         accountOwner,
         entryPoint
       );
-      expect(await hashGuardian.confirms(_hash2)).to.be.true;
+      expect(await hashGuardian.confirms(_hash4)).to.be.true;
       expect(await hashGuardian.isEnoughConfirm()).to.be.true;
     }
     // change owner

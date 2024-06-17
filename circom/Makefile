@@ -31,7 +31,7 @@ verify:
 
 ## Compile a smart contract.
 solidity:
-	snarkjs zkey export solidityverifier $(name)1.zkey verifier.sol
+	snarkjs zkey export solidityverifier $(name)1.zkey ${name}.sol
 
 ## Generate parameters for smart contract.
 generate:

@@ -1,13 +1,16 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { Verifier__factory } from '../../typechain';
-import { generateCalldata, generateProof, verifyProof } from '../circom-utils';
+import { convertStringToUint8, generateCalldata, generateProof, verifyProof } from '../jubjub-util';
 
 describe('Verify', function () {
   const _account1 = '0x9A85752B25Cb26a1E42f8E095588e4647859Bc36';
 
   it('Should verify', async () => {
-    let _proof = await generateProof(_account1);
+    const _privateKey = convertStringToUint8(
+      'fc0a5f8f953abdc85301347c264cdbec92ace822a197499492316b337e8684b5'
+    );
+    let _proof = await generateProof('01234567890123456789', _privateKey);
     let _verify = await verifyProof(_proof.proof, _proof.publicSignals);
     expect(_verify).to.be.true;
     if (_verify) {
