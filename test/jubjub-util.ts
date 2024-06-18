@@ -84,7 +84,7 @@ interface ReturnType {
     [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ];
   pC: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>];
-  pubSignals: [PromiseOrValue<BigNumberish>];
+  pubSignals: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>];
 }
 export async function generateCalldata(
   proof: Groth16Proof,

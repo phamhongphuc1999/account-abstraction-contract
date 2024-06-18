@@ -8,7 +8,7 @@ import '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 import '@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol';
 import '../interfaces/ISignatureValidator.sol';
 
-contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureValidatorConstants {
+contract ZKGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureValidatorConstants {
   struct OwnerTransaction {
     uint256 value;
     bytes data;
@@ -18,6 +18,7 @@ contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureVal
   }
 
   address public owner;
+  uint256 public increment;
   Account public account;
   uint256 public threshold;
   uint256 public guardianCount;
@@ -36,9 +37,10 @@ contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureVal
   event TransactionExecuted(address indexed target, uint256 value, bytes data, uint256 eta);
   event TransactionCancelled(address indexed target, uint256 value, bytes data, uint256 eta);
 
-  modifier onlyGuardian(uint _guardian) {
+  modifier isOkGuardianAndCounter(uint _guardian, uint256 _increment) {
     (bool isCheck, ) = guardianIndex(_guardian);
     require(isCheck, 'only guardian');
+    require(_increment == increment);
     _;
   }
 
@@ -53,6 +55,7 @@ contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureVal
   function initialize(Account _account) public initializer {
     account = _account;
     owner = _account.owner();
+    increment = 0;
   }
 
   function guardianIndex(uint _guardian) public view returns (bool, uint256) {
@@ -93,13 +96,13 @@ contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureVal
     uint[2] calldata _pA,
     uint[2][2] calldata _pB,
     uint[2] calldata _pC,
-    uint[1] calldata _pubSignals
-  ) external payable onlyGuardian(_pubSignals[0]) {
+    uint[2] calldata _pubSignals
+  ) external payable isOkGuardianAndCounter(_pubSignals[0], _pubSignals[1]) {
     bool isEnough = isEnoughConfirm();
     require(!isEnough, "enough already, you shouldn't confirm");
     require(!confirms[_pubSignals[0]], 'already confirmed');
     bool isValid = verifyProof(_pA, _pB, _pC, _pubSignals);
-    require(isValid, 'Proof is invalid');
+    require(isValid, 'proof is invalid');
     confirms[_pubSignals[0]] = true;
   }
 
@@ -109,6 +112,7 @@ contract HashGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureVal
     account.changeOwner(accountFactory, _tempNewOwner);
     owner = _tempNewOwner;
     _tempNewOwner = address(0);
+    increment = increment + 1;
     resetConfirm();
   }
 

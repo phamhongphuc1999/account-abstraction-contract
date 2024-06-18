@@ -7,10 +7,10 @@ import {
   AccountFactory,
   AccountFactory__factory,
   Account__factory,
-  HashGuardian,
-  HashGuardian__factory,
   MockEntryPoint,
   MockEntryPoint__factory,
+  ZKGuardian,
+  ZKGuardian__factory,
 } from '../../typechain';
 import {
   convertBigIntsToNumber,
@@ -28,15 +28,20 @@ async function getEta() {
   return block.timestamp + 1;
 }
 
+function extendNum(num: string) {
+  let result = num;
+  while (result.length < 20) result = `0${result}`;
+  return result;
+}
+
 interface ProofType {
   A: bigint[];
   R8: bigint[];
   S: bigint[];
   msg: bigint[];
 }
-const message = '01234567890123456789';
 
-describe('HashGuardian', function () {
+describe('ZKGuardian', function () {
   let account: Account;
   let accountOwner: Wallet = createAccountOwner();
   let accountFactory: AccountFactory;
@@ -63,10 +68,12 @@ describe('HashGuardian', function () {
   let _hash3: string;
   let _hash4: string;
 
-  let hashGuardian: HashGuardian;
+  let zkGuardian: ZKGuardian;
 
   const accountInter = new Interface(Account__factory.abi);
-  const hashGuardianInter = new Interface(HashGuardian__factory.abi);
+  const zkGuardianInter = new Interface(ZKGuardian__factory.abi);
+
+  let message = '';
 
   before(async () => {
     entryPoint = await new MockEntryPoint__factory(etherSigner).deploy();
@@ -103,22 +110,24 @@ describe('HashGuardian', function () {
       accountOwner,
       entryPoint
     );
-    const managerAddress = await account.computeAddress(HashGuardian__factory.bytecode, salt);
+    const managerAddress = await account.computeAddress(ZKGuardian__factory.bytecode, salt);
     const realManagerAddress = await account.accountGuardian();
     expect(realManagerAddress).to.eq(managerAddress);
-    hashGuardian = (await ethers.getContractAt('HashGuardian', managerAddress)) as HashGuardian;
-    expect(await hashGuardian.owner()).to.be.eq(accountOwner.address);
-    expect(await hashGuardian.account()).to.be.eq(account.address);
-    expect(await hashGuardian.maxGuardians()).to.be.eq(5);
+    zkGuardian = (await ethers.getContractAt('ZKGuardian', managerAddress)) as ZKGuardian;
+    message = (await zkGuardian.increment()).toString();
+    message = extendNum(message);
+    expect(await zkGuardian.owner()).to.be.eq(accountOwner.address);
+    expect(await zkGuardian.account()).to.be.eq(account.address);
+    expect(await zkGuardian.maxGuardians()).to.be.eq(5);
   });
   it('Should setup guardians', async function () {
-    let callData = hashGuardianInter.encodeFunctionData('setupGuardians', [
+    let callData = zkGuardianInter.encodeFunctionData('setupGuardians', [
       [_hash1, _hash2, _hash3],
       1,
       100000,
       0,
     ]);
-    callData = accountInter.encodeFunctionData('execute', [hashGuardian.address, 0, callData]);
+    callData = accountInter.encodeFunctionData('execute', [zkGuardian.address, 0, callData]);
     const _nonce = await entryPoint.getNonce(account.address, '0x0');
     await sendEntryPoint(
       accountFactory,
@@ -126,25 +135,25 @@ describe('HashGuardian', function () {
       accountOwner,
       entryPoint
     );
-    expect(await hashGuardian.guardianCount()).to.be.eq(3);
-    expect(await hashGuardian.threshold()).to.be.eq(1);
-    expect(await hashGuardian.guardians(0)).to.be.eq(_hash1);
-    expect(await hashGuardian.guardians(1)).to.be.eq(_hash2);
-    expect(await hashGuardian.guardians(2)).to.be.eq(_hash3);
-    expect(await hashGuardian.guardians(3)).to.be.eq(0);
-    expect(await hashGuardian.guardians(4)).to.be.eq(0);
+    expect(await zkGuardian.guardianCount()).to.be.eq(3);
+    expect(await zkGuardian.threshold()).to.be.eq(1);
+    expect(await zkGuardian.guardians(0)).to.be.eq(_hash1);
+    expect(await zkGuardian.guardians(1)).to.be.eq(_hash2);
+    expect(await zkGuardian.guardians(2)).to.be.eq(_hash3);
+    expect(await zkGuardian.guardians(3)).to.be.eq(0);
+    expect(await zkGuardian.guardians(4)).to.be.eq(0);
   });
   it('Should set threshold', async function () {
     // create setThreshold callData
-    let createThresholdCalldata = hashGuardianInter.encodeFunctionData('setThreshold', [2]);
+    let createThresholdCalldata = zkGuardianInter.encodeFunctionData('setThreshold', [2]);
     const eta = await getEta();
-    let _callData = hashGuardianInter.encodeFunctionData('queue', [
+    let _callData = zkGuardianInter.encodeFunctionData('queue', [
       0,
       createThresholdCalldata,
       eta,
       2,
     ]);
-    _callData = accountInter.encodeFunctionData('execute', [hashGuardian.address, 0, _callData]);
+    _callData = accountInter.encodeFunctionData('execute', [zkGuardian.address, 0, _callData]);
     let _nonce = await entryPoint.getNonce(account.address, '0x0');
     await sendEntryPoint(
       accountFactory,
@@ -152,14 +161,14 @@ describe('HashGuardian', function () {
       accountOwner,
       entryPoint
     );
-    let _transactionData = await hashGuardian.ownerTransactions(0);
+    let _transactionData = await zkGuardian.ownerTransactions(0);
     expect(_transactionData.data).to.be.eq(createThresholdCalldata);
     expect(_transactionData._type).to.be.eq(2);
     expect(_transactionData.executedType).to.be.eq(0);
     // execute setThreshold callData
     await new Promise((r) => setTimeout(r, 1000));
-    _callData = hashGuardianInter.encodeFunctionData('execute', [0]);
-    _callData = accountInter.encodeFunctionData('execute', [hashGuardian.address, 0, _callData]);
+    _callData = zkGuardianInter.encodeFunctionData('execute', [0]);
+    _callData = accountInter.encodeFunctionData('execute', [zkGuardian.address, 0, _callData]);
     _nonce = await entryPoint.getNonce(account.address, '0x0');
     await sendEntryPoint(
       accountFactory,
@@ -167,23 +176,23 @@ describe('HashGuardian', function () {
       accountOwner,
       entryPoint
     );
-    _transactionData = await hashGuardian.ownerTransactions(0);
+    _transactionData = await zkGuardian.ownerTransactions(0);
     expect(_transactionData.data).to.be.eq(createThresholdCalldata);
     expect(_transactionData._type).to.be.eq(2);
     expect(_transactionData.executedType).to.be.eq(1);
-    expect(await hashGuardian.threshold()).to.be.eq(2);
+    expect(await zkGuardian.threshold()).to.be.eq(2);
   });
   it('Should cancel queue transaction', async function () {
     // create setThreshold callData
-    let createThresholdCalldata = hashGuardianInter.encodeFunctionData('setThreshold', [1]);
+    let createThresholdCalldata = zkGuardianInter.encodeFunctionData('setThreshold', [1]);
     const eta = await getEta();
-    let _callData = hashGuardianInter.encodeFunctionData('queue', [
+    let _callData = zkGuardianInter.encodeFunctionData('queue', [
       0,
       createThresholdCalldata,
       eta,
       2,
     ]);
-    _callData = accountInter.encodeFunctionData('execute', [hashGuardian.address, 0, _callData]);
+    _callData = accountInter.encodeFunctionData('execute', [zkGuardian.address, 0, _callData]);
     let _nonce = await entryPoint.getNonce(account.address, '0x0');
     await sendEntryPoint(
       accountFactory,
@@ -191,14 +200,14 @@ describe('HashGuardian', function () {
       accountOwner,
       entryPoint
     );
-    let _transactionData = await hashGuardian.ownerTransactions(1);
+    let _transactionData = await zkGuardian.ownerTransactions(1);
     expect(_transactionData.data).to.be.eq(createThresholdCalldata);
     expect(_transactionData._type).to.be.eq(2);
     expect(_transactionData.executedType).to.be.eq(0);
     // cancel setThreshold callData
     await new Promise((r) => setTimeout(r, 1000));
-    _callData = hashGuardianInter.encodeFunctionData('cancel', [1]);
-    _callData = accountInter.encodeFunctionData('execute', [hashGuardian.address, 0, _callData]);
+    _callData = zkGuardianInter.encodeFunctionData('cancel', [1]);
+    _callData = accountInter.encodeFunctionData('execute', [zkGuardian.address, 0, _callData]);
     _nonce = await entryPoint.getNonce(account.address, '0x0');
     await sendEntryPoint(
       accountFactory,
@@ -206,18 +215,18 @@ describe('HashGuardian', function () {
       accountOwner,
       entryPoint
     );
-    _transactionData = await hashGuardian.ownerTransactions(1);
+    _transactionData = await zkGuardian.ownerTransactions(1);
     expect(_transactionData.data).to.be.eq(createThresholdCalldata);
     expect(_transactionData._type).to.be.eq(2);
     expect(_transactionData.executedType).to.be.eq(3);
-    expect(await hashGuardian.threshold()).to.be.eq(2);
+    expect(await zkGuardian.threshold()).to.be.eq(2);
   });
   it('Should add guardian', async function () {
     // create addGuardian callData
-    let addGuardianCalldata = hashGuardianInter.encodeFunctionData('addGuardian', [_hash4]);
+    let addGuardianCalldata = zkGuardianInter.encodeFunctionData('addGuardian', [_hash4]);
     const eta = await getEta();
-    let _callData = hashGuardianInter.encodeFunctionData('queue', [0, addGuardianCalldata, eta, 0]);
-    _callData = accountInter.encodeFunctionData('execute', [hashGuardian.address, 0, _callData]);
+    let _callData = zkGuardianInter.encodeFunctionData('queue', [0, addGuardianCalldata, eta, 0]);
+    _callData = accountInter.encodeFunctionData('execute', [zkGuardian.address, 0, _callData]);
     let _nonce = await entryPoint.getNonce(account.address, '0x0');
     await sendEntryPoint(
       accountFactory,
@@ -225,14 +234,14 @@ describe('HashGuardian', function () {
       accountOwner,
       entryPoint
     );
-    let _transactionData = await hashGuardian.ownerTransactions(2);
+    let _transactionData = await zkGuardian.ownerTransactions(2);
     expect(_transactionData.data).to.be.eq(addGuardianCalldata);
     expect(_transactionData._type).to.be.eq(0);
     expect(_transactionData.executedType).to.be.eq(0);
     // execute addGuardian callData
     await new Promise((r) => setTimeout(r, 1000));
-    _callData = hashGuardianInter.encodeFunctionData('execute', [2]);
-    _callData = accountInter.encodeFunctionData('execute', [hashGuardian.address, 0, _callData]);
+    _callData = zkGuardianInter.encodeFunctionData('execute', [2]);
+    _callData = accountInter.encodeFunctionData('execute', [zkGuardian.address, 0, _callData]);
     _nonce = await entryPoint.getNonce(account.address, '0x0');
     await sendEntryPoint(
       accountFactory,
@@ -240,26 +249,26 @@ describe('HashGuardian', function () {
       accountOwner,
       entryPoint
     );
-    _transactionData = await hashGuardian.ownerTransactions(2);
+    _transactionData = await zkGuardian.ownerTransactions(2);
     expect(_transactionData.data).to.be.eq(addGuardianCalldata);
     expect(_transactionData._type).to.be.eq(0);
     expect(_transactionData.executedType).to.be.eq(1);
-    const _result = await hashGuardian.guardianIndex(_hash4);
+    const _result = await zkGuardian.guardianIndex(_hash4);
     expect(_result[0]).to.be.eq(true);
     expect(_result[1]).to.be.eq(3);
-    expect(await hashGuardian.guardianCount()).to.be.eq(4);
-    expect(await hashGuardian.guardians(0)).to.be.eq(_hash1);
-    expect(await hashGuardian.guardians(1)).to.be.eq(_hash2);
-    expect(await hashGuardian.guardians(2)).to.be.eq(_hash3);
-    expect(await hashGuardian.guardians(3)).to.be.eq(_hash4);
-    expect(await hashGuardian.guardians(4)).to.be.eq(0);
+    expect(await zkGuardian.guardianCount()).to.be.eq(4);
+    expect(await zkGuardian.guardians(0)).to.be.eq(_hash1);
+    expect(await zkGuardian.guardians(1)).to.be.eq(_hash2);
+    expect(await zkGuardian.guardians(2)).to.be.eq(_hash3);
+    expect(await zkGuardian.guardians(3)).to.be.eq(_hash4);
+    expect(await zkGuardian.guardians(4)).to.be.eq(0);
   });
   it('Should remove guardian', async function () {
     // create removeGuardian callData
-    let removeCalldata = hashGuardianInter.encodeFunctionData('removeGuardian', [_hash3]);
+    let removeCalldata = zkGuardianInter.encodeFunctionData('removeGuardian', [_hash3]);
     const eta = await getEta();
-    let _callData = hashGuardianInter.encodeFunctionData('queue', [0, removeCalldata, eta, 1]);
-    _callData = accountInter.encodeFunctionData('execute', [hashGuardian.address, 0, _callData]);
+    let _callData = zkGuardianInter.encodeFunctionData('queue', [0, removeCalldata, eta, 1]);
+    _callData = accountInter.encodeFunctionData('execute', [zkGuardian.address, 0, _callData]);
     let _nonce = await entryPoint.getNonce(account.address, '0x0');
     await sendEntryPoint(
       accountFactory,
@@ -267,14 +276,14 @@ describe('HashGuardian', function () {
       accountOwner,
       entryPoint
     );
-    let _transactionData = await hashGuardian.ownerTransactions(3);
+    let _transactionData = await zkGuardian.ownerTransactions(3);
     expect(_transactionData.data).to.be.eq(removeCalldata);
     expect(_transactionData._type).to.be.eq(1);
     expect(_transactionData.executedType).to.be.eq(0);
     // execute removeGuardian callData
     await new Promise((r) => setTimeout(r, 1000));
-    _callData = hashGuardianInter.encodeFunctionData('execute', [3]);
-    _callData = accountInter.encodeFunctionData('execute', [hashGuardian.address, 0, _callData]);
+    _callData = zkGuardianInter.encodeFunctionData('execute', [3]);
+    _callData = accountInter.encodeFunctionData('execute', [zkGuardian.address, 0, _callData]);
     _nonce = await entryPoint.getNonce(account.address, '0x0');
     await sendEntryPoint(
       accountFactory,
@@ -282,28 +291,28 @@ describe('HashGuardian', function () {
       accountOwner,
       entryPoint
     );
-    _transactionData = await hashGuardian.ownerTransactions(3);
+    _transactionData = await zkGuardian.ownerTransactions(3);
     expect(_transactionData.data).to.be.eq(removeCalldata);
     expect(_transactionData._type).to.be.eq(1);
     expect(_transactionData.executedType).to.be.eq(1);
-    const _result = await hashGuardian.guardianIndex(_hash3);
+    const _result = await zkGuardian.guardianIndex(_hash3);
     expect(_result[0]).to.be.eq(false);
     expect(_result[1]).to.be.eq(0);
-    expect(await hashGuardian.guardianCount()).to.be.eq(3);
-    expect(await hashGuardian.guardians(0)).to.be.eq(_hash1);
-    expect(await hashGuardian.guardians(1)).to.be.eq(_hash2);
-    expect(await hashGuardian.guardians(2)).to.be.eq(_hash4);
-    expect(await hashGuardian.guardians(3)).to.be.eq(0);
-    expect(await hashGuardian.guardians(4)).to.be.eq(0);
+    expect(await zkGuardian.guardianCount()).to.be.eq(3);
+    expect(await zkGuardian.guardians(0)).to.be.eq(_hash1);
+    expect(await zkGuardian.guardians(1)).to.be.eq(_hash2);
+    expect(await zkGuardian.guardians(2)).to.be.eq(_hash4);
+    expect(await zkGuardian.guardians(3)).to.be.eq(0);
+    expect(await zkGuardian.guardians(4)).to.be.eq(0);
   });
   it('Should change owner', async function () {
     const newOwner = createAccountOwner();
     // submit new owner
-    const _submitCalldata = hashGuardianInter.encodeFunctionData('submitNewOwner', [
+    const _submitCalldata = zkGuardianInter.encodeFunctionData('submitNewOwner', [
       newOwner.address,
     ]);
     let _callData = accountInter.encodeFunctionData('execute', [
-      hashGuardian.address,
+      zkGuardian.address,
       0,
       _submitCalldata,
     ]);
@@ -314,21 +323,21 @@ describe('HashGuardian', function () {
       accountOwner,
       entryPoint
     );
-    expect(await hashGuardian._tempNewOwner()).to.be.eq(newOwner.address);
+    expect(await zkGuardian._tempNewOwner()).to.be.eq(newOwner.address);
     // confirm change new owner
     let _proof = await generateProof(message, convertStringToUint8(_privateKey1));
     let _verify = await verifyProof(_proof.proof, _proof.publicSignals);
     expect(_verify).to.be.true;
     if (_verify) {
       const { pA, pB, pC, pubSignals } = await generateCalldata(_proof.proof, _proof.publicSignals);
-      const _confirmCalldata = hashGuardianInter.encodeFunctionData('confirmChangeOwner', [
+      const _confirmCalldata = zkGuardianInter.encodeFunctionData('confirmChangeOwner', [
         pA,
         pB,
         pC,
         pubSignals,
       ]);
       let _callData = accountInter.encodeFunctionData('execute', [
-        hashGuardian.address,
+        zkGuardian.address,
         0,
         _confirmCalldata,
       ]);
@@ -339,8 +348,8 @@ describe('HashGuardian', function () {
         accountOwner,
         entryPoint
       );
-      expect(await hashGuardian.confirms(_hash1)).to.be.true;
-      expect(await hashGuardian.isEnoughConfirm()).to.be.false;
+      expect(await zkGuardian.confirms(_hash1)).to.be.true;
+      expect(await zkGuardian.isEnoughConfirm()).to.be.false;
     }
 
     _proof = await generateProof(message, convertStringToUint8(_privateKey4));
@@ -348,14 +357,14 @@ describe('HashGuardian', function () {
     expect(_verify).to.be.true;
     if (_verify) {
       const { pA, pB, pC, pubSignals } = await generateCalldata(_proof.proof, _proof.publicSignals);
-      const _confirmCalldata = hashGuardianInter.encodeFunctionData('confirmChangeOwner', [
+      const _confirmCalldata = zkGuardianInter.encodeFunctionData('confirmChangeOwner', [
         pA,
         pB,
         pC,
         pubSignals,
       ]);
       let _callData = accountInter.encodeFunctionData('execute', [
-        hashGuardian.address,
+        zkGuardian.address,
         0,
         _confirmCalldata,
       ]);
@@ -366,16 +375,16 @@ describe('HashGuardian', function () {
         accountOwner,
         entryPoint
       );
-      expect(await hashGuardian.confirms(_hash4)).to.be.true;
-      expect(await hashGuardian.isEnoughConfirm()).to.be.true;
+      expect(await zkGuardian.confirms(_hash4)).to.be.true;
+      expect(await zkGuardian.isEnoughConfirm()).to.be.true;
     }
     // change owner
     const oldOwner = await account.owner();
-    let _changeCalldata = hashGuardianInter.encodeFunctionData('changeOwner', [
+    let _changeCalldata = zkGuardianInter.encodeFunctionData('changeOwner', [
       accountFactory.address,
     ]);
     _callData = accountInter.encodeFunctionData('execute', [
-      hashGuardian.address,
+      zkGuardian.address,
       0,
       _changeCalldata,
     ]);
@@ -390,13 +399,15 @@ describe('HashGuardian', function () {
     expect(oldAccountAddress).to.be.eq(AddressZero);
     const newAccountAddress = await accountFactory.getAddress(newOwner.address, salt);
     expect(newAccountAddress).to.be.eq(account.address);
-    const _guardianOwnerAddress = await hashGuardian.owner();
+    const _guardianOwnerAddress = await zkGuardian.owner();
     expect(_guardianOwnerAddress).to.be.eq(newOwner.address);
-    const _tempNewOwner = await hashGuardian._tempNewOwner();
+    const _tempNewOwner = await zkGuardian._tempNewOwner();
     expect(_tempNewOwner).to.be.eq(AddressZero);
-    const _cHash1 = await hashGuardian.confirms(_hash1);
+    const _cHash1 = await zkGuardian.confirms(_hash1);
     expect(_cHash1).to.be.false;
-    const _cHash2 = await hashGuardian.confirms(_hash2);
+    const _cHash2 = await zkGuardian.confirms(_hash2);
     expect(_cHash2).to.be.false;
+    const increment = await zkGuardian.increment();
+    expect(increment).to.be.eq(1);
   });
 });

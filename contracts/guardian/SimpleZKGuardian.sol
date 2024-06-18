@@ -3,7 +3,7 @@ pragma solidity ^0.8.12;
 
 import './Verifier.sol';
 
-contract SimpleHashGuardian is Verifier {
+contract SimpleZKGuardian is Verifier {
   mapping(uint => bool) public guardians;
   uint256 public counter;
   uint256 public threshold;
@@ -25,7 +25,7 @@ contract SimpleHashGuardian is Verifier {
     uint[2] calldata _pA,
     uint[2][2] calldata _pB,
     uint[2] calldata _pC,
-    uint[1] calldata _pubSignals
+    uint[2] calldata _pubSignals
   ) external payable {
     bool isValid = verifyProof(_pA, _pB, _pC, _pubSignals);
     require(isValid, 'Proof is invalid');

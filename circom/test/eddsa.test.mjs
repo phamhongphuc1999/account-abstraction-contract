@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import { wasm as wasm_tester } from 'circom_tester';
 import { buildBabyjub, buildEddsa } from 'circomlibjs';
 
-function buffer2bits(buff) {
+export function buffer2bits(buff) {
   const res = [];
   for (let i = 0; i < buff.length; i++) {
     for (let j = 0; j < 8; j++) {

@@ -10,7 +10,7 @@ describe('Verify', function () {
     const _privateKey = convertStringToUint8(
       'fc0a5f8f953abdc85301347c264cdbec92ace822a197499492316b337e8684b5'
     );
-    let _proof = await generateProof('01234567890123456789', _privateKey);
+    let _proof = await generateProof('000540000000000362701', _privateKey);
     let _verify = await verifyProof(_proof.proof, _proof.publicSignals);
     expect(_verify).to.be.true;
     if (_verify) {

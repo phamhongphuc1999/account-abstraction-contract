@@ -7,7 +7,7 @@ import '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 import '@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import './AccountFactory.sol';
-import './guardian/HashGuardian.sol';
+import './guardian/ZKGuardian.sol';
 
 contract Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initializable {
   using ECDSA for bytes32;
@@ -155,7 +155,7 @@ contract Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initiali
   }
 
   function deployGuardian(bytes32 _salt) public onlyOwner {
-    HashGuardian manager = (new HashGuardian){salt: _salt}();
+    ZKGuardian manager = (new ZKGuardian){salt: _salt}();
     manager.initialize(this);
     setUpGuardian(address(manager));
   }

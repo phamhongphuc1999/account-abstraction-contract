@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { SimpleHashGuardian, SimpleHashGuardian__factory } from '../../typechain';
+import { SimpleZKGuardian, SimpleZKGuardian__factory } from '../../typechain';
 import {
   convertBigIntsToNumber,
   convertStringToUint8,
@@ -18,8 +18,8 @@ interface ProofType {
 }
 const message = '01234567890123456789';
 
-describe('SimpleHashGuardian', function () {
-  let simpleHashGuardian: SimpleHashGuardian;
+describe('SimpleZKGuardian', function () {
+  let simpleZKGuardian: SimpleZKGuardian;
   const etherSigner = ethers.provider.getSigner();
   const _privateKey1 = 'fc0a5f8f953abdc85301347c264cdbec92ace822a197499492316b337e8684b5';
   const _privateKey2 = 'deea921bccc87954c9d8707a2a9fe6accf39742da61ac8acc5c9b8f242c279aa';
@@ -35,7 +35,7 @@ describe('SimpleHashGuardian', function () {
   let _hash3: string;
 
   before(async () => {
-    simpleHashGuardian = await new SimpleHashGuardian__factory(etherSigner).deploy();
+    simpleZKGuardian = await new SimpleZKGuardian__factory(etherSigner).deploy();
     _proof1 = await generateWitness(message, convertStringToUint8(_privateKey1));
     _proof2 = await generateWitness(message, convertStringToUint8(_privateKey2));
     _proof3 = await generateWitness(message, convertStringToUint8(_privateKey3));
@@ -45,25 +45,25 @@ describe('SimpleHashGuardian', function () {
   });
 
   it('Should add guardians', async function () {
-    await simpleHashGuardian.addGuardian(_hash1);
-    await simpleHashGuardian.addGuardian(_hash2);
-    await simpleHashGuardian.addGuardian(_hash3);
+    await simpleZKGuardian.addGuardian(_hash1);
+    await simpleZKGuardian.addGuardian(_hash2);
+    await simpleZKGuardian.addGuardian(_hash3);
 
-    const _isGuardian1 = await simpleHashGuardian.isGuardian(_hash1);
+    const _isGuardian1 = await simpleZKGuardian.isGuardian(_hash1);
     expect(_isGuardian1).to.be.true;
-    const _isGuardian3 = await simpleHashGuardian.isGuardian(_hash3);
+    const _isGuardian3 = await simpleZKGuardian.isGuardian(_hash3);
     expect(_isGuardian3).to.be.true;
   });
   it('Should execute', async function () {
-    let _counter = await simpleHashGuardian.counter();
+    let _counter = await simpleZKGuardian.counter();
     expect(_counter).to.eq(0);
     let _proof = await generateProof(message, convertStringToUint8(_privateKey1));
     let _verify = await verifyProof(_proof.proof, _proof.publicSignals);
     expect(_verify).to.be.true;
     if (_verify) {
       const { pA, pB, pC, pubSignals } = await generateCalldata(_proof.proof, _proof.publicSignals);
-      await simpleHashGuardian.verifyGuardian(pA, pB, pC, pubSignals);
-      _counter = await simpleHashGuardian.counter();
+      await simpleZKGuardian.verifyGuardian(pA, pB, pC, pubSignals);
+      _counter = await simpleZKGuardian.counter();
       expect(_counter).to.eq(1);
     }
 
@@ -72,8 +72,8 @@ describe('SimpleHashGuardian', function () {
     expect(_verify).to.be.true;
     if (_verify) {
       const { pA, pB, pC, pubSignals } = await generateCalldata(_proof.proof, _proof.publicSignals);
-      await simpleHashGuardian.verifyGuardian(pA, pB, pC, pubSignals);
-      _counter = await simpleHashGuardian.counter();
+      await simpleZKGuardian.verifyGuardian(pA, pB, pC, pubSignals);
+      _counter = await simpleZKGuardian.counter();
       expect(_counter).to.eq(2);
 
       _proof = await generateProof(message, convertStringToUint8(_privateKey4));
@@ -84,7 +84,7 @@ describe('SimpleHashGuardian', function () {
           _proof.proof,
           _proof.publicSignals
         );
-        await expect(simpleHashGuardian.verifyGuardian(pA, pB, pC, pubSignals)).to.be.revertedWith(
+        await expect(simpleZKGuardian.verifyGuardian(pA, pB, pC, pubSignals)).to.be.revertedWith(
           "Verifier isn't a guardian"
         );
       }
