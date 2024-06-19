@@ -1,4 +1,4 @@
-import { buildBabyjub, buildEddsa } from 'circomlibjs';
+import { buildBabyjub, buildEddsa, buildPoseidon } from 'circomlibjs';
 import { BigNumberish } from 'ethers';
 import { readFileSync } from 'fs';
 import { Groth16Proof, PublicSignals, groth16 } from 'snarkjs';
@@ -35,6 +35,16 @@ export function convertBigIntsToNumber(
     e2 = e2 + e2;
   }
   return mode == 'normal' ? result.toString(16) : `0x${result.toString(16)}`;
+}
+
+export async function generatePoseidonHash(
+  _address: string,
+  mode: 'normal' | 'hex' = 'normal'
+): Promise<string> {
+  const poseidon = await buildPoseidon();
+  const F = poseidon.F;
+  const res2 = poseidon([_address]);
+  return mode == 'normal' ? String(F.toObject(res2)) : `0x${String(F.toObject(res2).toString(16))}`;
 }
 
 export async function generateWitness(message: string, privateKey: Uint8Array) {

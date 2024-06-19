@@ -16,6 +16,7 @@ import {
   convertBigIntsToNumber,
   convertStringToUint8,
   generateCalldata,
+  generatePoseidonHash,
   generateProof,
   generateWitness,
   verifyProof,
@@ -49,9 +50,6 @@ describe('ZKGuardian', function () {
   const etherSigner = ethers.provider.getSigner();
 
   const guardian1: Wallet = createAccountOwner();
-  const guardian2: Wallet = createAccountOwner();
-  const guardian3: Wallet = createAccountOwner();
-  const guardian4: Wallet = createAccountOwner();
 
   const _privateKey1 = 'fc0a5f8f953abdc85301347c264cdbec92ace822a197499492316b337e8684b5';
   const _privateKey2 = 'deea921bccc87954c9d8707a2a9fe6accf39742da61ac8acc5c9b8f242c279aa';
@@ -86,10 +84,10 @@ describe('ZKGuardian', function () {
     _proof2 = await generateWitness(message, convertStringToUint8(_privateKey2));
     _proof3 = await generateWitness(message, convertStringToUint8(_privateKey3));
     _proof4 = await generateWitness(message, convertStringToUint8(_privateKey4));
-    _hash1 = convertBigIntsToNumber(_proof1.A, 256, 'hex');
-    _hash2 = convertBigIntsToNumber(_proof2.A, 256, 'hex');
-    _hash3 = convertBigIntsToNumber(_proof3.A, 256, 'hex');
-    _hash4 = convertBigIntsToNumber(_proof4.A, 256, 'hex');
+    _hash1 = await generatePoseidonHash(convertBigIntsToNumber(_proof1.A, 256, 'hex'), 'hex');
+    _hash2 = await generatePoseidonHash(convertBigIntsToNumber(_proof2.A, 256, 'hex'), 'hex');
+    _hash3 = await generatePoseidonHash(convertBigIntsToNumber(_proof3.A, 256, 'hex'), 'hex');
+    _hash4 = await generatePoseidonHash(convertBigIntsToNumber(_proof4.A, 256, 'hex'), 'hex');
 
     await fund(accountOwner.address, '1000');
     await fund(account.address, '1000');

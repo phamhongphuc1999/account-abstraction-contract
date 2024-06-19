@@ -5,6 +5,7 @@ import {
   convertBigIntsToNumber,
   convertStringToUint8,
   generateCalldata,
+  generatePoseidonHash,
   generateProof,
   generateWitness,
   verifyProof,
@@ -39,9 +40,9 @@ describe('SimpleZKGuardian', function () {
     _proof1 = await generateWitness(message, convertStringToUint8(_privateKey1));
     _proof2 = await generateWitness(message, convertStringToUint8(_privateKey2));
     _proof3 = await generateWitness(message, convertStringToUint8(_privateKey3));
-    _hash1 = convertBigIntsToNumber(_proof1.A, 256, 'hex');
-    _hash2 = convertBigIntsToNumber(_proof2.A, 256, 'hex');
-    _hash3 = convertBigIntsToNumber(_proof3.A, 256, 'hex');
+    _hash1 = await generatePoseidonHash(convertBigIntsToNumber(_proof1.A, 256, 'hex'), 'hex');
+    _hash2 = await generatePoseidonHash(convertBigIntsToNumber(_proof2.A, 256, 'hex'), 'hex');
+    _hash3 = await generatePoseidonHash(convertBigIntsToNumber(_proof3.A, 256, 'hex'), 'hex');
   });
 
   it('Should add guardians', async function () {

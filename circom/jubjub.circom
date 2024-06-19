@@ -2,6 +2,7 @@ pragma circom 2.0.0;
 
 include "../node_modules/circomlib/circuits/eddsa.circom";
 include "../node_modules/circomlib/circuits/bitify.circom";
+include "../node_modules/circomlib/circuits/poseidon.circom";
 
 template Jubjub() {
   signal input msg[80];
@@ -13,12 +14,14 @@ template Jubjub() {
   signal output outA;
   signal output outMsg;
 
-  component verifier = EdDSAVerifier(80);
-
   component bitAToNum = Bits2Num(256);
+  component poseidon = Poseidon(1);
   bitAToNum.in <== A;
-  outA <== bitAToNum.out;
+  poseidon.inputs[0] <== bitAToNum.out;
+
+  outA <== poseidon.out;
   
+  component verifier = EdDSAVerifier(80);
   verifier.msg <== msg;
   verifier.A <== A;
   verifier.R8 <== R8;
