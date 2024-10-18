@@ -1,13 +1,20 @@
-import { generateCalldata, generateProof, verifyProof } from '../test/poseidon-utils';
+import {
+  convertStringToUint8,
+  generateCalldata,
+  generateProof,
+  verifyProof,
+} from '../test/jubjub-util';
 
 async function main() {
-  const account = '0x871DBcE2b9923A35716e7E83ee402B535298538E';
-  const { proof, publicSignals } = await generateProof(account);
+  const _privateKey = convertStringToUint8(
+    'fc0a5f8f953abdc85301347c264cdbec92ace822a197499492316b337e8684b5'
+  );
+  const { proof, publicSignals } = await generateProof('00540000000000362701', _privateKey);
   const res = await verifyProof(proof, publicSignals);
   if (res === true) {
     console.log('Verification OK');
-    const _call = await generateCalldata(proof, publicSignals);
-    console.log('🚀 ~ main ~ _call:', JSON.parse(`[${_call}]`));
+    const { pA, pB, pC, pubSignals } = await generateCalldata(proof, publicSignals);
+    console.log('🚀 ~ main ~ _call:', pA, pB, pC, pubSignals);
   } else {
     console.log('Invalid proof');
   }

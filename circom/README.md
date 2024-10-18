@@ -25,6 +25,23 @@ source ./shells/setup.sh
 make compile name=circom-file-name
 ```
 
+The output must be similar:
+
+```shell
+circom jubjub.circom --r1cs --wasm
+template instances: 104
+non-linear constraints: 17158
+linear constraints: 726
+public inputs: 0
+private inputs: 848 (844 belong to witness)
+public outputs: 2
+wires: 18711
+labels: 47765
+Written successfully: ./jubjub.r1cs
+Written successfully: ./jubjub_js/jubjub.wasm
+Everything went okay
+```
+
 #### Step 2: compute witness
 
 ```shell
