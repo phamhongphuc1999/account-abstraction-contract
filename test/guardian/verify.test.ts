@@ -13,7 +13,6 @@ describe('Verify', function () {
     expect(_verify).to.be.true;
     if (_verify) {
       const { pA, pB, pC, pubSignals } = await generateCalldata(_proof.proof, _proof.publicSignals);
-      console.log('🚀 ~ it ~ pubSignals:', pubSignals);
       const etherSigner = ethers.provider.getSigner();
       const verifier = await new Verifier__factory(etherSigner).deploy();
       const isVerify = await verifier.verifyProof(pA, pB, pC, pubSignals);
