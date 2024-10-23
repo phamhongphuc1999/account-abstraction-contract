@@ -6,9 +6,8 @@ import '../Account.sol';
 import '../AccountFactory.sol';
 import '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 import '@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol';
-import '../interfaces/ISignatureValidator.sol';
 
-contract ZKGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureValidatorConstants {
+contract ZKGuardian is Verifier, Initializable, UUPSUpgradeable {
   struct OwnerTransaction {
     uint256 value;
     bytes data;
@@ -89,6 +88,7 @@ contract ZKGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureValid
 
   function submitNewOwner(address _newOwner) public onlyOwner {
     require(_tempNewOwner == address(0), 'current transaction must be finished');
+    require(owner != _tempNewOwner, 'new owner muse be different from old owner');
     _tempNewOwner = _newOwner;
   }
 
@@ -126,11 +126,11 @@ contract ZKGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureValid
     uint256 _guardianLen = _guardians.length;
     require(
       _threshold > 0 && _threshold <= _guardianLen,
-      'threshold must be greaster than 0 and less than or equal to number of guardians'
+      'threshold must be greater than 0 and less than or equal to number of guardians'
     );
     require(
       _guardianLen <= maxGuardians,
-      'number of guardians must be less than or equal maxGuardians'
+      'number of guardians must be less than or equal to maxGuardians'
     );
     for (uint256 i = 0; i < _guardianLen; i++) {
       uint guardian = _guardians[i];
@@ -151,7 +151,7 @@ contract ZKGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureValid
     require(threshold > 0, "threshold haven't been setup yet.");
     require(
       _threshold > 0 && _threshold <= guardianCount,
-      '_threshold must be bigger than 0 and smaller or equals to current number of guardians.'
+      'threshold must be bigger than 0 and smaller or equals to number of guardians.'
     );
     require(_tempNewOwner == address(0), 'change owner is in process, please finish it first');
     threshold = _threshold;
@@ -202,7 +202,7 @@ contract ZKGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureValid
   }
 
   function execute(uint256 _index) external payable onlyOwner {
-    require(_index >= 0 && _index <= ownerTransactions.length, 'Out of range');
+    require(_index >= 0 && _index <= ownerTransactions.length, 'Out of owner transactions');
     OwnerTransaction memory transaction = ownerTransactions[_index];
     uint256 eta = transaction.eta;
     require(block.timestamp >= eta, "Transaction hasn't surpassed time lock.");
@@ -221,7 +221,7 @@ contract ZKGuardian is Verifier, Initializable, UUPSUpgradeable, ISignatureValid
   }
 
   function cancel(uint256 _index) external onlyOwner {
-    require(_index >= 0 && _index <= ownerTransactions.length, 'Out of range');
+    require(_index >= 0 && _index <= ownerTransactions.length, 'Out of owner transactions');
     ownerTransactions[_index].executedType = 3;
     OwnerTransaction memory transaction = ownerTransactions[_index];
     emit TransactionCancelled(address(this), transaction.value, transaction.data, transaction.eta);
