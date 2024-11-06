@@ -23,7 +23,7 @@ describe('EdDSA test', function () {
   before(async () => {
     eddsa = await buildEddsa();
     babyJub = await buildBabyjub();
-    circuit = await wasm_tester('circom/test/circuits/eddsa_test.circom');
+    circuit = await wasm_tester('test/circuits/eddsa_test.circom');
   });
 
   it('Sign a single 10 bytes from 0 to 9', async () => {

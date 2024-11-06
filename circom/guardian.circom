@@ -4,7 +4,7 @@ include "../node_modules/circomlib/circuits/eddsa.circom";
 include "../node_modules/circomlib/circuits/bitify.circom";
 include "../node_modules/circomlib/circuits/poseidon.circom";
 
-template Jubjub() {
+template Guardian() {
   signal input msg[80];
 
   signal input A[256];
@@ -46,4 +46,4 @@ template Jubjub() {
   outMsg <== lc1;
 }
 
-component main = Jubjub();
+component main = Guardian();

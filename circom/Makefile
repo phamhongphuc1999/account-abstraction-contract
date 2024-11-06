@@ -37,6 +37,10 @@ solidity:
 generate:
 	snarkjs generatecall
 
+## Test. | Test and maintain
+circom_test:
+	npx mocha test/$(name).test.mjs --max-old-space-size=4000
+
 ## Clear.
 clear:
 	rm -rf *_js

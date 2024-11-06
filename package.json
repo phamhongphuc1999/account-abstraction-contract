@@ -16,7 +16,7 @@
     "lint": "eslint --config ./.eslintrc-staged.js --cache --fix",
     "eslint": "eslint .",
     "prepare": "husky install",
-    "circomtest": "mocha circom/test/bits.test.mjs --max-old-space-size=4000"
+    "circomtest": "mocha circom/test/poseidon.test.mjs --max-old-space-size=4000"
   },
   "dependencies": {
     "@account-abstraction/contracts": "^0.6.0",

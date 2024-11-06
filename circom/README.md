@@ -77,5 +77,5 @@ make solidity name=circom-file-name
 ## Run circom test
 
 ```shell
-yarn circomtest
+make circom_test name=poseidon
 ```
