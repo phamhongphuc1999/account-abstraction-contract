@@ -72,8 +72,8 @@ export async function generateProof(
   const { A, R8, S, msg } = await generateWitness(message, privateKey);
   const { proof, publicSignals } = await groth16.fullProve(
     { msg, A, R8, S },
-    './circom/jubjub_js/jubjub.wasm',
-    './circom/jubjub1.zkey'
+    './circom/guardian_js/guardian.wasm',
+    './circom/guardian1.zkey'
   );
   return { proof, publicSignals };
 }

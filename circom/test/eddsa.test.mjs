@@ -13,6 +13,17 @@ export function buffer2bits(buff) {
   return res;
 }
 
+export function bitArray2buffer(a) {
+  const len = Math.floor((a.length - 1) / 8) + 1;
+  const b = new Buffer.alloc(len);
+
+  for (let i = 0; i < a.length; i++) {
+    const p = Math.floor(i / 8);
+    b[p] = b[p] | (Number(a[i]) << (7 - (i % 8)));
+  }
+  return b;
+}
+
 describe('EdDSA test', function () {
   let circuit;
   let eddsa;
@@ -52,7 +63,6 @@ describe('EdDSA test', function () {
       { A: aBits, R8: r8Bits, S: sBits, msg: msgBits },
       true
     );
-
     await circuit.checkConstraints(w);
   });
 });
