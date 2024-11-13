@@ -40,6 +40,7 @@ contract ZKGuardian is Verifier, Initializable, UUPSUpgradeable {
     (bool isCheck, ) = guardianIndex(_guardian);
     require(isCheck, 'only guardian');
     require(_increment == increment);
+    require(_hash == uint256(uint160(_tempNewOwner)));
     _;
   }
 
