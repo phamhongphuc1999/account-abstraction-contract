@@ -1,35 +1,12 @@
 import { assert } from 'chai';
 import { wasm as wasm_tester } from 'circom_tester';
 import { buildBabyjub, buildEddsa } from 'circomlibjs';
-
-export function buffer2bits(buff) {
-  const res = [];
-  for (let i = 0; i < buff.length; i++) {
-    for (let j = 0; j < 8; j++) {
-      if ((buff[i] >> j) & 1) res.push(1n);
-      else res.push(0n);
-    }
-  }
-  return res;
-}
-
-export function bitArray2buffer(a) {
-  const len = Math.floor((a.length - 1) / 8) + 1;
-  const b = new Buffer.alloc(len);
-
-  for (let i = 0; i < a.length; i++) {
-    const p = Math.floor(i / 8);
-    b[p] = b[p] | (Number(a[i]) << (7 - (i % 8)));
-  }
-  return b;
-}
+import { buffer2bits } from './utils.mjs';
 
 describe('EdDSA test', function () {
   let circuit;
   let eddsa;
   let babyJub;
-
-  this.timeout(100000);
 
   before(async () => {
     eddsa = await buildEddsa();
@@ -38,7 +15,7 @@ describe('EdDSA test', function () {
   });
 
   it('Sign a single 10 bytes from 0 to 9', async () => {
-    const msg = Buffer.from('00010203040506070809', 'hex');
+    const msg = Buffer.from('000000000000000000cd', 'hex');
 
     const prvKey = Buffer.from(
       '0001020304050607080900010203040506070809000102030405060708090001',
@@ -59,10 +36,11 @@ describe('EdDSA test', function () {
     const sBits = buffer2bits(pSignature.slice(32, 64));
     const aBits = buffer2bits(pPubKey);
 
-    const w = await circuit.calculateWitness(
+    const witness = await circuit.calculateWitness(
       { A: aBits, R8: r8Bits, S: sBits, msg: msgBits },
       true
     );
-    await circuit.checkConstraints(w);
+    await circuit.assertOut(witness, { out: msgBits });
+    await circuit.checkConstraints(witness);
   });
 });

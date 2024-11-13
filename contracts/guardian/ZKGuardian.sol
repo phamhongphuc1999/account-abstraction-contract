@@ -36,10 +36,11 @@ contract ZKGuardian is Verifier, Initializable, UUPSUpgradeable {
   event TransactionExecuted(address indexed target, uint256 value, bytes data, uint256 eta);
   event TransactionCancelled(address indexed target, uint256 value, bytes data, uint256 eta);
 
-  modifier isOkGuardianAndCounter(uint _guardian, uint256 _increment) {
+  modifier isPublicSignalCorrect(uint _guardian, uint256 _increment, uint256 _hash) {
     (bool isCheck, ) = guardianIndex(_guardian);
     require(isCheck, 'only guardian');
     require(_increment == increment);
+    require(_hash == uint256(uint160(_tempNewOwner)));
     _;
   }
 
@@ -96,8 +97,8 @@ contract ZKGuardian is Verifier, Initializable, UUPSUpgradeable {
     uint[2] calldata _pA,
     uint[2][2] calldata _pB,
     uint[2] calldata _pC,
-    uint[2] calldata _pubSignals
-  ) external payable isOkGuardianAndCounter(_pubSignals[0], _pubSignals[1]) {
+    uint[3] calldata _pubSignals
+  ) external payable isPublicSignalCorrect(_pubSignals[0], _pubSignals[1], _pubSignals[2]) {
     bool isEnough = isEnoughConfirm();
     require(!isEnough, "enough already, you shouldn't confirm");
     require(!confirms[_pubSignals[0]], 'already confirmed');
