@@ -1,6 +1,6 @@
 pragma circom 2.0.6;
 
-include "./hash-function/raw-md5.circom";
+include "../hash-function/raw-md5.circom";
 
 template Md5Test(){
     signal input plainText[16];

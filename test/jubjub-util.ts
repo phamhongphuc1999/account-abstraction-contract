@@ -4,6 +4,15 @@ import { readFileSync } from 'fs';
 import { Groth16Proof, PublicSignals, groth16 } from 'snarkjs';
 import { PromiseOrValue } from '../typechain/common';
 
+export function makeVerifiedInput(recoveredAddress: string, increment: string) {
+  let excludedAddress = recoveredAddress.toLowerCase();
+  if (excludedAddress.slice(0, 2) == '0x') excludedAddress = excludedAddress.slice(2);
+  while (excludedAddress.length < 48) excludedAddress = `0${excludedAddress}`;
+  let sIncrement = parseInt(increment).toString(16);
+  while (sIncrement.length < 16) sIncrement = `0${sIncrement}`;
+  return `${sIncrement}${excludedAddress}`;
+}
+
 export function convertUint8ToString(_in: Uint8Array) {
   return Buffer.from(_in).toString('hex');
 }
@@ -94,7 +103,11 @@ interface ReturnType {
     [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ];
   pC: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>];
-  pubSignals: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>];
+  pubSignals: [
+    PromiseOrValue<BigNumberish>,
+    PromiseOrValue<BigNumberish>,
+    PromiseOrValue<BigNumberish>
+  ];
 }
 export async function generateCalldata(
   proof: Groth16Proof,

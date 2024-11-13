@@ -151,3 +151,4 @@ circom/**/*.wtns
 circom/*.json
 circom/*.sol
 circom/circom/
+circom/circom-ecdsa/

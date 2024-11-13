@@ -19,6 +19,7 @@ import {
   generatePoseidonHash,
   generateProof,
   generateWitness,
+  makeVerifiedInput,
   verifyProof,
 } from '../jubjub-util';
 import { AddressZero, createAccountOwner, fund, salt, sendEntryPoint } from '../utils';
@@ -27,12 +28,6 @@ async function getEta() {
   const blockNumber = await ethers.provider.getBlockNumber();
   const block = await ethers.provider.getBlock(blockNumber);
   return block.timestamp + 1;
-}
-
-function extendNum(num: string) {
-  let result = num;
-  while (result.length < 20) result = `0${result}`;
-  return result;
 }
 
 interface ProofType {
@@ -112,8 +107,6 @@ describe('ZKGuardian', function () {
     const realManagerAddress = await account.accountGuardian();
     expect(realManagerAddress).to.eq(managerAddress);
     zkGuardian = (await ethers.getContractAt('ZKGuardian', managerAddress)) as ZKGuardian;
-    message = (await zkGuardian.increment()).toString();
-    message = extendNum(message);
     expect(await zkGuardian.owner()).to.be.eq(accountOwner.address);
     expect(await zkGuardian.account()).to.be.eq(account.address);
     expect(await zkGuardian.maxGuardians()).to.be.eq(5);
@@ -321,7 +314,10 @@ describe('ZKGuardian', function () {
       accountOwner,
       entryPoint
     );
-    expect(await zkGuardian._tempNewOwner()).to.be.eq(newOwner.address);
+    const _increment = (await zkGuardian.increment()).toString();
+    const _hash = await zkGuardian._tempNewOwner();
+    message = makeVerifiedInput(_hash, _increment);
+    expect(_hash).to.be.eq(newOwner.address);
     // confirm change new owner
     let _proof = await generateProof(message, convertStringToUint8(_privateKey1));
     let _verify = await verifyProof(_proof.proof, _proof.publicSignals);

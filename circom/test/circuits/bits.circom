@@ -1,26 +1,48 @@
 pragma circom 2.0.0;
 
 template Bits() {
-  signal input msg[80];
-  signal output out;
-  var lc1 = 0;
+  signal input msg[256];
 
-  for (var i = 0; i < 10; i++) {
-    var index = i * 8;
-    var temp1 = msg[index];
-    temp1 += msg[index + 1] * 2;
-    temp1 += msg[index + 2] * 4;
-    temp1 += msg[index + 3] * 8;
+  signal output increment;
+  signal output address;
 
-    var temp2 = msg[index + 4];
-    temp2 += msg[index + 5] * 2;
-    temp2 += msg[index + 6] * 4;
-    temp2 += msg[index + 7] * 8;
+  var iTotal = 0;
+  var multiplicationLevel = 1;
 
-    lc1 = lc1 * 10 + temp2;
-    lc1 = lc1 * 10 + temp1;
+  for (var i = 7; i >= 0; i--) {
+    var index = i * 8 + 7;
+    var piece = msg[index];
+    piece = piece * 2 + msg[index - 1];
+    piece = piece * 2 + msg[index - 2];
+    piece = piece * 2 + msg[index - 3];
+    piece = piece * 2 + msg[index - 4];
+    piece = piece * 2 + msg[index - 5];
+    piece = piece * 2 + msg[index - 6];
+    piece = piece * 2 + msg[index - 7];
+    iTotal = iTotal + piece * multiplicationLevel;
+    multiplicationLevel = multiplicationLevel * 256;
   }
-  out <== lc1;
+  log(iTotal);
+  increment <== iTotal;
+  
+  var aTotal = 0;
+  multiplicationLevel = 1;
+  
+  for (var i = 31; i >= 8; i--) {
+    var index = i * 8 + 7;
+    var piece = msg[index];
+    piece = piece * 2 + msg[index - 1];
+    piece = piece * 2 + msg[index - 2];
+    piece = piece * 2 + msg[index - 3];
+    piece = piece * 2 + msg[index - 4];
+    piece = piece * 2 + msg[index - 5];
+    piece = piece * 2 + msg[index - 6];
+    piece = piece * 2 + msg[index - 7];
+    aTotal = aTotal + piece * multiplicationLevel;
+    multiplicationLevel = multiplicationLevel * 256;
+  }
+  log(aTotal);
+  address <== aTotal;
 }
 
 component main = Bits();

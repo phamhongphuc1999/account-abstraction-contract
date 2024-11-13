@@ -8,6 +8,7 @@ import {
   generatePoseidonHash,
   generateProof,
   generateWitness,
+  makeVerifiedInput,
   verifyProof,
 } from '../jubjub-util';
 
@@ -17,7 +18,6 @@ interface ProofType {
   S: bigint[];
   msg: bigint[];
 }
-const message = '01234567890123456789';
 
 describe('SimpleZKGuardian', function () {
   let simpleZKGuardian: SimpleZKGuardian;
@@ -35,7 +35,10 @@ describe('SimpleZKGuardian', function () {
   let _hash2: string;
   let _hash3: string;
 
+  let message = '';
+
   before(async () => {
+    message = makeVerifiedInput('0x019b4EE7AD22FFD4c215e5F424FAf4c75577dc36', '2');
     simpleZKGuardian = await new SimpleZKGuardian__factory(etherSigner).deploy();
     _proof1 = await generateWitness(message, convertStringToUint8(_privateKey1));
     _proof2 = await generateWitness(message, convertStringToUint8(_privateKey2));
