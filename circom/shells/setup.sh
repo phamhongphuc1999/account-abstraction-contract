@@ -25,3 +25,7 @@ cd ../../
 
 printf "${Green}Step 3: Install snarkjs${NC}\n"
 npm install -g snarkjs
+
+printf "${Green}Step 4: Clone necessary github${NC}\n"
+git clone https://github.com/hanzeG/snarkjs_bench.git
+git clone https://github.com/0xPARC/circom-ecdsa.git
