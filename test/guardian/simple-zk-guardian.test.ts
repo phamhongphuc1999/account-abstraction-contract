@@ -94,4 +94,11 @@ describe('SimpleZKGuardian', function () {
       }
     }
   });
+  it('Evaluate time to generating proof', async function () {
+    const evaluatedMessage = makeVerifiedInput('0x019b4EE7AD22FFD4c215e5F424FAf4c75577dc36', '2');
+    const startTime = performance.now();
+    const _proof = await generateProof(evaluatedMessage, convertStringToUint8(_privateKey1));
+    const endTime = performance.now();
+    console.log('time run: ', endTime - startTime);
+  });
 });

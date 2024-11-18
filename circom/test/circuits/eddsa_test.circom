@@ -5,10 +5,6 @@ include "../../../node_modules/circomlib/circuits/eddsa.circom";
 template EddsaTest() {
   signal input msg[80];
 
-  for (var i = 0; i < 80; i++) {
-    log(msg[i]);
-  }
-
   signal input A[256];
   signal input R8[256];
   signal input S[256];

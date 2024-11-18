@@ -28,17 +28,17 @@ make compile name=circom-file-name
 The output must be similar:
 
 ```shell
-circom jubjub.circom --r1cs --wasm
+circom guardian.circom --r1cs --wasm
 template instances: 104
-non-linear constraints: 17158
-linear constraints: 726
+non-linear constraints: 19311
+linear constraints: 817
 public inputs: 0
-private inputs: 848 (844 belong to witness)
-public outputs: 2
-wires: 18711
-labels: 47765
-Written successfully: ./jubjub.r1cs
-Written successfully: ./jubjub_js/jubjub.wasm
+private inputs: 1024 (1020 belong to witness)
+public outputs: 3
+wires: 21131
+labels: 53533
+Written successfully: ./guardian.r1cs
+Written successfully: ./guardian_js/guardian.wasm
 Everything went okay
 ```
 

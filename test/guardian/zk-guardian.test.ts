@@ -97,7 +97,7 @@ describe('ZKGuardian', function () {
     callData = accountInter.encodeFunctionData('deployGuardian', [salt]);
     callData = accountInter.encodeFunctionData('execute', [account.address, 0, callData]);
     const _nonce = await entryPoint.getNonce(account.address, '0x0');
-    await sendEntryPoint(
+    let receipt = await sendEntryPoint(
       accountFactory,
       { sender: account.address, callData, nonce: _nonce },
       accountOwner,
@@ -110,6 +110,7 @@ describe('ZKGuardian', function () {
     expect(await zkGuardian.owner()).to.be.eq(accountOwner.address);
     expect(await zkGuardian.account()).to.be.eq(account.address);
     expect(await zkGuardian.maxGuardians()).to.be.eq(5);
+    console.log('deploy guardian smart contract: ', receipt.gasUsed);
   });
   it('Should setup guardians', async function () {
     let callData = zkGuardianInter.encodeFunctionData('setupGuardians', [
