@@ -1,4 +1,7 @@
 import { wasm as wasm_tester } from 'circom_tester';
+import { writeFileSync } from 'fs';
+import { resolve } from 'node:path';
+import { buffer2bits } from './utils.mjs';
 
 describe('SHA256 circuit test', function () {
   let _circuit;
@@ -11,7 +14,7 @@ describe('SHA256 circuit test', function () {
     while (plainText.length < 64) plainText = `0${plainText}`;
     plainText = buffer2bits(Buffer.from(plainText, 'hex'));
 
-    writeFileSync(resolve('input.json'), JSON.stringify({ plainText }), 'utf-8');
+    writeFileSync(resolve('sha256-test_input.json'), JSON.stringify({ plainText }), 'utf-8');
 
     const witness = await _circuit.calculateWitness({ plainText });
     await _circuit.checkConstraints(witness);

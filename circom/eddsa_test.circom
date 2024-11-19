@@ -1,6 +1,6 @@
 pragma circom 2.0.0;
 
-include "../../../node_modules/circomlib/circuits/eddsa.circom";
+include "../node_modules/circomlib/circuits/eddsa.circom";
 
 template EddsaTest() {
   signal input msg[80];

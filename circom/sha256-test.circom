@@ -1,6 +1,6 @@
 pragma circom 2.0.6;
 
-include "../../../../node_modules/circomlib/circuits/sha256/sha256.circom";
+include "../node_modules/circomlib/circuits/sha256/sha256.circom";
 
 template Sha256Test(){
     signal input plainText[256];

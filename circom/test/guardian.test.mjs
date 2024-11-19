@@ -21,7 +21,7 @@ describe('Guardian test', function () {
   before(async () => {
     eddsa = await buildEddsa();
     babyJub = await buildBabyjub();
-    circuit = await wasm_tester('./guardian.circom');
+    circuit = await wasm_tester('../circom/guardian.circom');
   });
 
   it('verify signature', async () => {
@@ -51,7 +51,7 @@ describe('Guardian test', function () {
     const aBits = buffer2bits(pPubKey);
 
     writeFileSync(
-      resolve('input.json'),
+      resolve('guardian_input.json'),
       JSON.stringify({
         msg: msgBits.map((item) => item.toString()),
         A: aBits.map((item) => item.toString()),

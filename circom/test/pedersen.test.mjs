@@ -15,7 +15,7 @@ describe('Pedersen circuit test', function () {
     while (plainText.length < 64) plainText = `0${plainText}`;
     plainText = buffer2bits(Buffer.from(plainText, 'hex'));
 
-    writeFileSync(resolve('input.json'), JSON.stringify({ plainText }), 'utf-8');
+    writeFileSync(resolve('pedersen-test_input.json'), JSON.stringify({ plainText }), 'utf-8');
 
     const witness = await _circuit.calculateWitness({ plainText });
     await _circuit.checkConstraints(witness);

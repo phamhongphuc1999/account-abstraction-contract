@@ -1,6 +1,8 @@
 import { assert } from 'chai';
 import { wasm as wasm_tester } from 'circom_tester';
 import { buildBabyjub, buildEddsa } from 'circomlibjs';
+import { writeFileSync } from 'fs';
+import { resolve } from 'node:path';
 import { buffer2bits } from './utils.mjs';
 
 describe('EdDSA test', function () {
@@ -11,7 +13,7 @@ describe('EdDSA test', function () {
   before(async () => {
     eddsa = await buildEddsa();
     babyJub = await buildBabyjub();
-    circuit = await wasm_tester('test/circuits/eddsa_test.circom');
+    circuit = await wasm_tester('../circom/eddsa_test.circom');
   });
 
   it('Sign a single 10 bytes from 0 to 9', async () => {
@@ -35,6 +37,17 @@ describe('EdDSA test', function () {
     const r8Bits = buffer2bits(pSignature.slice(0, 32));
     const sBits = buffer2bits(pSignature.slice(32, 64));
     const aBits = buffer2bits(pPubKey);
+
+    writeFileSync(
+      resolve('eddsa_test_input.json'),
+      JSON.stringify({
+        msg: msgBits.map((item) => item.toString()),
+        A: aBits.map((item) => item.toString()),
+        R8: r8Bits.map((item) => item.toString()),
+        S: sBits.map((item) => item.toString()),
+      }),
+      'utf-8'
+    );
 
     const witness = await circuit.calculateWitness(
       { A: aBits, R8: r8Bits, S: sBits, msg: msgBits },

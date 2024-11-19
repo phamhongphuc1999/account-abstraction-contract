@@ -152,4 +152,4 @@ circom/*.json
 circom/*.sol
 circom/circom/
 circom/circom-ecdsa/
-circom/snarkjs_bench/
+circom/hash-circuits/

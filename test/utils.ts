@@ -55,6 +55,16 @@ const panicCodes: { [key: number]: string } = {
   0x51: 'zero-initialized variable of internal function type',
 };
 
+export function analyticTimes(times: Array<number>, times1: Array<number>) {
+  const sortedTimes = [...times].sort((x, y) => (x > y ? 1 : -1));
+  const averageTime = times.reduce((a, b) => a + b) / 10;
+  const averageTime1 = times1.reduce((a, b) => a + b) / 10;
+  console.log('times: ', sortedTimes, times);
+  console.log('average generation proof time: ', averageTime);
+  console.log('times1: ', times1);
+  console.log('average verification time: ', averageTime1);
+}
+
 export function decodeRevertReason(data: string, nullIfNoMatch = true): string | null {
   const methodSig = data.slice(0, 10);
   const dataParams = '0x' + data.slice(10);

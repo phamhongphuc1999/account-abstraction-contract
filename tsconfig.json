@@ -8,12 +8,6 @@
     "skipLibCheck": true,
     "resolveJsonModule": true
   },
-  "include": [
-    "./scripts",
-    "./test",
-    "./typechain-types",
-    "semi-test/deep-evaluation.test.ts",
-    "semi-test/gas-cost.test.ts"
-  ],
+  "include": ["./scripts", "./test", "./typechain-types"],
   "files": ["./hardhat.config.ts"]
 }

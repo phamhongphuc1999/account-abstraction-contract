@@ -14,7 +14,7 @@ compile:
 
 ## Compute witness with WebAssembly.
 witness:
-	node $(name)_js/generate_witness.js $(name)_js/$(name).wasm input.json witness.wtns
+	node $(name)_js/generate_witness.js $(name)_js/$(name).wasm $(name)_input.json $(name)_witness.wtns
 
 ## Provide a power.
 power:
@@ -23,11 +23,11 @@ power:
 
 ## Generate a proof
 proof:
-	snarkjs groth16 prove $(name)1.zkey witness.wtns proof.json public.json
+	snarkjs groth16 prove $(name)1.zkey $(name)_witness.wtns $(name)_proof.json $(name)_public.json
 
 ## Verify a proof.
 verify:
-	snarkjs groth16 verify $(name)_verification_key.json public.json proof.json
+	snarkjs groth16 verify $(name)_verification_key.json $(name)_public.json $(name)_proof.json
 
 ## Compile a smart contract.
 solidity:
