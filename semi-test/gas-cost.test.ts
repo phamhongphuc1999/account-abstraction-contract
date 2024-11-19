@@ -3,15 +3,6 @@ import { Wallet } from 'ethers';
 import { Interface, parseEther } from 'ethers/lib/utils';
 import { ethers } from 'hardhat';
 import {
-  Account,
-  Account__factory,
-  AccountFactory__factory,
-  MockEntryPoint__factory,
-  ZKGuardian,
-  ZKGuardian__factory,
-} from '../../typechain';
-import { createAccountOwner, fund, getAccountInitCode, salt, sendEntryPoint } from '../utils';
-import {
   convertBigIntsToNumber,
   convertStringToUint8,
   generateCalldata,
@@ -20,7 +11,16 @@ import {
   generateWitness,
   makeVerifiedInput,
   verifyProof,
-} from '../jubjub-util';
+} from '../test/jubjub-util';
+import { createAccountOwner, fund, getAccountInitCode, salt, sendEntryPoint } from '../test/utils';
+import {
+  Account,
+  Account__factory,
+  AccountFactory__factory,
+  MockEntryPoint__factory,
+  ZKGuardian,
+  ZKGuardian__factory,
+} from '../typechain';
 
 const DECIMAL_18 = '1000000000000000000';
 const DECIMAL_9 = '1000000000';

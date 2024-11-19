@@ -27,7 +27,7 @@ proof:
 
 ## Verify a proof.
 verify:
-	snarkjs groth16 verify verification_key.json public.json proof.json
+	snarkjs groth16 verify $(name)_verification_key.json public.json proof.json
 
 ## Compile a smart contract.
 solidity:
@@ -51,7 +51,7 @@ clear:
 	rm -f *.sol
 	rm -f proof.json
 	rm -f public.json
-	rm -f verification_key.json
+	rm -f *verification_key.json
 
 ## Shows help. | Help
 help:

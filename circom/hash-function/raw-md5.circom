@@ -1,10 +1,10 @@
 pragma circom 2.1.6;
 
-include "../../../../node_modules/circomlib/circuits/gates.circom";
-include "../../../../node_modules/circomlib/circuits/bitify.circom";
-include "../../../../node_modules/circomlib/circuits/comparators.circom";
-include "../../../../node_modules/circomlib/circuits/binsum.circom";
-include "../../../../node_modules/circomlib/circuits/multiplexer.circom";
+include "../../node_modules/circomlib/circuits/gates.circom";
+include "../../node_modules/circomlib/circuits/bitify.circom";
+include "../../node_modules/circomlib/circuits/comparators.circom";
+include "../../node_modules/circomlib/circuits/binsum.circom";
+include "../../node_modules/circomlib/circuits/multiplexer.circom";
 
 template IfElse() {
   signal input cond;

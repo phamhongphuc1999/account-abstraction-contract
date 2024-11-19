@@ -9,7 +9,7 @@ import {
   convertBigIntsToNumber,
   generatePoseidonHash,
   makeVerifiedInput,
-} from './test/utils.mjs';
+} from './utils.mjs';
 
 describe('Guardian test', function () {
   let circuit;
@@ -50,16 +50,16 @@ describe('Guardian test', function () {
     const sBits = buffer2bits(pSignature.slice(32, 64));
     const aBits = buffer2bits(pPubKey);
 
-    // writeFileSync(
-    //   resolve('test123.json'),
-    //   JSON.stringify({
-    //     msg: msgBits.map((item) => item.toString()),
-    //     A: aBits.map((item) => item.toString()),
-    //     R8: r8Bits.map((item) => item.toString()),
-    //     S: sBits.map((item) => item.toString()),
-    //   }),
-    //   'utf-8'
-    // );
+    writeFileSync(
+      resolve('input.json'),
+      JSON.stringify({
+        msg: msgBits.map((item) => item.toString()),
+        A: aBits.map((item) => item.toString()),
+        R8: r8Bits.map((item) => item.toString()),
+        S: sBits.map((item) => item.toString()),
+      }),
+      'utf-8'
+    );
 
     const witness = await circuit.calculateWitness(
       { A: aBits, R8: r8Bits, S: sBits, msg: msgBits },

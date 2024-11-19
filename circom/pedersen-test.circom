@@ -1,6 +1,6 @@
 pragma circom 2.0.6;
 
-include "../../../../node_modules/circomlib/circuits/pedersen.circom";
+include "../node_modules/circomlib/circuits/pedersen.circom";
 
 template PedersenTest(){
     signal input plainText[256];

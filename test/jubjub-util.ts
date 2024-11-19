@@ -21,7 +21,7 @@ export function convertStringToUint8(_in: string) {
   return Uint8Array.from(Buffer.from(_in, 'hex'));
 }
 
-function buffer2bits(buff: Uint8Array) {
+export function buffer2bits(buff: Uint8Array) {
   const res = [];
   for (let i = 0; i < buff.length; i++) {
     for (let j = 0; j < 8; j++) {
@@ -91,7 +91,7 @@ export async function verifyProof(
   proof: Groth16Proof,
   publicSignals: PublicSignals
 ): Promise<boolean> {
-  const vKey = JSON.parse(readFileSync('./circom/verification_key.json', 'utf-8'));
+  const vKey = JSON.parse(readFileSync('./circom/guardian_verification_key.json', 'utf-8'));
   const res = await groth16.verify(vKey, publicSignals, proof);
   return res;
 }
