@@ -9,7 +9,6 @@ source ~/.profile
 nvm install v21.7.3
 node --version
 npm --version
-npm install -g yarn
 
 printf "${Green}Step 2: Install circom${NC}\n"
 curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh

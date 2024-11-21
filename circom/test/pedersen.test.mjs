@@ -5,7 +5,6 @@ import { resolve } from 'node:path';
 
 describe('Pedersen circuit test', function () {
   let _circuit;
-  this.timeout(1000000);
 
   before(async () => {
     _circuit = await wasm_tester('../circom/pedersen-test.circom');

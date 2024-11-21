@@ -5,7 +5,6 @@ import { buffer2bits } from './utils.mjs';
 
 describe('Keccak256 circuit test', function () {
   let circuit;
-  this.timeout(1000000);
 
   before(async () => {
     circuit = await wasm_tester('../circom/keccak256-test.circom');
