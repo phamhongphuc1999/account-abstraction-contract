@@ -16,7 +16,7 @@ describe('EdDSA test', function () {
     circuit = await wasm_tester('../circom/eddsa_test.circom');
   });
 
-  it('Sign a single 10 bytes from 0 to 9', async () => {
+  it('Verify EdDSA signature', async () => {
     const _address = '0x019b4EE7AD22FFD4c215e5F424FAf4c75577dc36';
     const _increment = '2';
     const message = makeVerifiedInput(_address, _increment);
