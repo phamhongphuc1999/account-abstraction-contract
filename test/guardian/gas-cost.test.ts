@@ -11,8 +11,8 @@ import {
   generateWitness,
   makeVerifiedInput,
   verifyProof,
-} from '../test/jubjub-util';
-import { createAccountOwner, fund, getAccountInitCode, salt, sendEntryPoint } from '../test/utils';
+} from '../jubjub-util';
+import { createAccountOwner, fund, getAccountInitCode, salt, sendEntryPoint } from '../utils';
 import {
   Account,
   Account__factory,
@@ -20,7 +20,7 @@ import {
   MockEntryPoint__factory,
   ZKGuardian,
   ZKGuardian__factory,
-} from '../typechain';
+} from '../../typechain';
 
 const DECIMAL_18 = '1000000000000000000';
 const DECIMAL_9 = '1000000000';
@@ -137,6 +137,8 @@ describe('GasCost', function () {
     const newOwner = createAccountOwner();
     const _submitCalldata = zkGuardianInter.encodeFunctionData('submitNewOwner', [
       newOwner.address,
+      accountFactory.address,
+      salt,
     ]);
     let _callData = accountInter.encodeFunctionData('execute', [
       zkGuardian.address,
@@ -161,24 +163,8 @@ describe('GasCost', function () {
     expect(_verify).to.be.true;
     if (_verify) {
       const { pA, pB, pC, pubSignals } = await generateCalldata(_proof.proof, _proof.publicSignals);
-      const _confirmCalldata = zkGuardianInter.encodeFunctionData('confirmChangeOwner', [
-        pA,
-        pB,
-        pC,
-        pubSignals,
-      ]);
-      let _callData = accountInter.encodeFunctionData('execute', [
-        zkGuardian.address,
-        0,
-        _confirmCalldata,
-      ]);
-      let _nonce = await entryPoint.getNonce(account.address, '0x0');
-      receipt = await sendEntryPoint(
-        accountFactory,
-        { sender: account.address, callData: _callData, nonce: _nonce },
-        accountOwner,
-        entryPoint
-      );
+      const tx = await zkGuardian.connect(etherSigner).confirmChangeOwner(pA, pB, pC, pubSignals);
+      const receipt = await tx.wait();
       expect(await zkGuardian.confirms(_hash1)).to.be.true;
       expect(await zkGuardian.isEnoughConfirm()).to.be.true;
       console.log('confirm change owner: ', receipt.gasUsed);

@@ -87,9 +87,15 @@ contract ZKGuardian is Verifier, Initializable, UUPSUpgradeable {
     return counter >= threshold;
   }
 
-  function submitNewOwner(address _newOwner) public onlyOwner {
+  function submitNewOwner(
+    address _newOwner,
+    AccountFactory accountFactory,
+    uint256 salt
+  ) public onlyOwner {
     require(_tempNewOwner == address(0), 'current transaction must be finished');
     require(owner != _tempNewOwner, 'new owner muse be different from old owner');
+    address _address = accountFactory.getAddress(_tempNewOwner, salt);
+    require(_address == address(0), 'new owner must not setup AA');
     _tempNewOwner = _newOwner;
   }
 

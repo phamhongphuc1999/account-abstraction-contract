@@ -302,6 +302,8 @@ describe('ZKGuardian', function () {
     // submit new owner
     const _submitCalldata = zkGuardianInter.encodeFunctionData('submitNewOwner', [
       newOwner.address,
+      accountFactory.address,
+      salt,
     ]);
     let _callData = accountInter.encodeFunctionData('execute', [
       zkGuardian.address,
