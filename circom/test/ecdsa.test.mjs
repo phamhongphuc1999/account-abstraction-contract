@@ -15,7 +15,6 @@ describe('ECDSA test', function () {
   it('Verify ECDSA signature', async () => {
     const privKey = 88549154299169935420064281163296845505587953610183896504176354567359434168161n;
     const pubKey = Point.fromPrivateKey(privKey);
-    console.log('🚀 ~ it ~ pubKey:', pubKey);
     const msghash_bigint = 1234n;
 
     var msghash = bigint_to_Uint8Array(msghash_bigint);

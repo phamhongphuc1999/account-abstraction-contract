@@ -1,6 +1,6 @@
-# My circom
+## My circom
 
-## Circom usage <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Lady%20Beetle.png" alt="Lady Beetle" width="25" height="25" />
+### Circom usage <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Lady%20Beetle.png" alt="Lady Beetle" width="25" height="25" />
 
 - I use devcontainer to create and run docker environment. After running docker container, you must follow the instruction in [this file](./shells/setup.sh). If you cause segment fault error on build docker's process, you should change node version, v21.7.3 fit for me.
 
@@ -48,6 +48,8 @@ Everything went okay
 make witness name=circom-file-name
 ```
 
+- you can run `make circom_test name=circom-test-name` first to generate input.json file as secret data.
+
 #### Step 3: <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Deer.png" alt="Deer" width="25" height="25" /> provide power
 
 ```shell
@@ -74,8 +76,8 @@ make verify
 make solidity name=circom-file-name
 ```
 
-## Run circom test
+### Run circom test
 
 ```shell
-make circom_test name=poseidon
+make circom_test name=circom-test-name
 ```
