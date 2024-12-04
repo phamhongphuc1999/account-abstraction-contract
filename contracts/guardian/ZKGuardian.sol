@@ -93,9 +93,13 @@ contract ZKGuardian is Verifier, Initializable, UUPSUpgradeable {
     uint256 salt
   ) public onlyOwner {
     require(_tempNewOwner == address(0), 'current transaction must be finished');
-    require(owner != _tempNewOwner, 'new owner muse be different from old owner');
-    address _address = accountFactory.getAddress(_tempNewOwner, salt);
-    require(_address == address(0), 'new owner must not setup AA');
+    require(_newOwner != owner, 'new owner muse be different from old owner');
+    address _address = accountFactory.getAddress(_newOwner, salt);
+    uint256 codeSize;
+    assembly {
+      codeSize := extcodesize(_address)
+    }
+    require(codeSize == 0, 'new owner must not setup AA');
     _tempNewOwner = _newOwner;
   }
 

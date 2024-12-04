@@ -97,7 +97,7 @@ describe('ZKGuardian', function () {
     callData = accountInter.encodeFunctionData('deployGuardian', [salt]);
     callData = accountInter.encodeFunctionData('execute', [account.address, 0, callData]);
     const _nonce = await entryPoint.getNonce(account.address, '0x0');
-    let receipt = await sendEntryPoint(
+    await sendEntryPoint(
       accountFactory,
       { sender: account.address, callData, nonce: _nonce },
       accountOwner,
@@ -110,7 +110,6 @@ describe('ZKGuardian', function () {
     expect(await zkGuardian.owner()).to.be.eq(accountOwner.address);
     expect(await zkGuardian.account()).to.be.eq(account.address);
     expect(await zkGuardian.maxGuardians()).to.be.eq(5);
-    console.log('deploy guardian smart contract: ', receipt.gasUsed);
   });
   it('Should setup guardians', async function () {
     let callData = zkGuardianInter.encodeFunctionData('setupGuardians', [
@@ -296,6 +295,15 @@ describe('ZKGuardian', function () {
     expect(await zkGuardian.guardians(2)).to.be.eq(_hash4);
     expect(await zkGuardian.guardians(3)).to.be.eq(0);
     expect(await zkGuardian.guardians(4)).to.be.eq(0);
+  });
+  it('Should stop change owner because new owner has account yet', async function () {
+    const _newOwner = createAccountOwner();
+    await accountFactory.createAccount(_newOwner.address, salt);
+    await expect(
+      zkGuardian
+        .connect(accountOwner)
+        .submitNewOwner(_newOwner.address, accountFactory.address, salt)
+    ).to.be.revertedWith('new owner must not setup AA');
   });
   it('Should change owner', async function () {
     const newOwner = createAccountOwner();

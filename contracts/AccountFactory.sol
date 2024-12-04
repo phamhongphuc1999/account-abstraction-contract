@@ -5,6 +5,7 @@ import './Account.sol';
 import '@openzeppelin/contracts/utils/Create2.sol';
 import '@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol';
 import '@account-abstraction/contracts/interfaces/IEntryPoint.sol';
+import 'hardhat/console.sol';
 
 contract AccountFactory {
   Account public immutable accountImplementation;
