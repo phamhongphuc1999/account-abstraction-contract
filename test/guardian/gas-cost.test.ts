@@ -3,6 +3,14 @@ import { Wallet } from 'ethers';
 import { Interface, parseEther } from 'ethers/lib/utils';
 import { ethers } from 'hardhat';
 import {
+  Account,
+  Account__factory,
+  AccountFactory__factory,
+  MockEntryPoint__factory,
+  ZKGuardian,
+  ZKGuardian__factory,
+} from '../../typechain';
+import {
   convertBigIntsToNumber,
   convertStringToUint8,
   generateCalldata,
@@ -13,17 +21,7 @@ import {
   verifyProof,
 } from '../jubjub-util';
 import { createAccountOwner, fund, getAccountInitCode, salt, sendEntryPoint } from '../utils';
-import {
-  Account,
-  Account__factory,
-  AccountFactory__factory,
-  MockEntryPoint__factory,
-  ZKGuardian,
-  ZKGuardian__factory,
-} from '../../typechain';
 
-const DECIMAL_18 = '1000000000000000000';
-const DECIMAL_9 = '1000000000';
 const SIMPLE_SALT = '0x'.padEnd(66, '0');
 
 describe('GasCost', function () {
@@ -61,6 +59,8 @@ describe('GasCost', function () {
     const _code = _nonce.isZero()
       ? getAccountInitCode(accountOwner.address, SIMPLE_SALT, accountFactory.address)
       : undefined;
+    const postBalance1 = await etherSigner.provider.getBalance(accountAddress);
+    console.log('🚀 ~ postBalance1:', postBalance1);
     // transfer 0.1 BNB transaction to deploy account
     let receipt = await sendEntryPoint(
       accountFactory,
@@ -68,17 +68,23 @@ describe('GasCost', function () {
       accountOwner,
       entryPoint
     );
+    const lastBalance1 = await etherSigner.provider.getBalance(accountAddress);
+    console.log('🚀 ~ lastBalance1:', lastBalance1, postBalance1.sub(lastBalance1));
     console.log('the first transaction: ', receipt.gasUsed);
 
     // transfer 0.1 BNB transaction
     _nonce = await entryPoint.getNonce(accountAddress, '0x0');
     expect(_nonce).to.eq('1');
+    const postBalance2 = await etherSigner.provider.getBalance(accountAddress);
+    console.log('🚀 ~ postBalance2:', postBalance2);
     receipt = await sendEntryPoint(
       accountFactory,
       { sender: accountAddress, callData, nonce: _nonce },
       accountOwner,
       entryPoint
     );
+    const lastBalance2 = await etherSigner.provider.getBalance(accountAddress);
+    console.log('🚀 ~ lastBalance2:', lastBalance2, postBalance1.sub(lastBalance2));
     console.log('the transfer transaction: ', receipt.gasUsed);
 
     // deploy guardian smart contract
