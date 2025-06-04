@@ -17,6 +17,8 @@ chmod +x ./shells/setup.sh
 source ./shells/setup.sh
 ```
 
+I suggest you should run step by step in setup.sh file because some steps can not be run automatically. Step 2 can be crashed and requires restart docker to finish installing cargo (like restart compute to finish installing a package).
+
 - Try to compile and generate proof, you can follow command line written in `Makefile`.
 
 #### Step 1: compile <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Jellyfish.png" alt="Jellyfish" width="25" height="25" /> circom

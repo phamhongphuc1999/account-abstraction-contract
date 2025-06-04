@@ -41,6 +41,7 @@ describe('SimpleZKGuardian', function () {
     message = makeVerifiedInput('0x019b4EE7AD22FFD4c215e5F424FAf4c75577dc36', '2');
     simpleZKGuardian = await new SimpleZKGuardian__factory(etherSigner).deploy();
     _proof1 = await generateWitness(message, convertStringToUint8(_privateKey1));
+    console.log('🚀 ~ before ~ _proof1:', _proof1);
     _proof2 = await generateWitness(message, convertStringToUint8(_privateKey2));
     _proof3 = await generateWitness(message, convertStringToUint8(_privateKey3));
     _hash1 = await generatePoseidonHash(convertBigIntsToNumber(_proof1.A, 256, 'hex'), 'hex');
