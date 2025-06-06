@@ -3,6 +3,7 @@ pragma circom 2.0.0;
 include "../node_modules/circomlib/circuits/eddsa.circom";
 include "../node_modules/circomlib/circuits/bitify.circom";
 include "../node_modules/circomlib/circuits/poseidon.circom";
+include "./analytic-message.circom";
 
 template Guardian() {
   signal input msg[256];
@@ -28,41 +29,13 @@ template Guardian() {
   verifier.R8 <== R8;
   verifier.S <== S;
 
-  var iTotal = 0;
-  var multiplicationLevel = 1;
+  component incrementAnalytic = AnalyticMessage(0, 7);
+  incrementAnalytic.msg <== msg;
+  increment <== incrementAnalytic.result;
 
-  for (var i = 7; i >= 0; i--) {
-    var index = i * 8 + 7;
-    var piece = msg[index];
-    piece = piece * 2 + msg[index - 1];
-    piece = piece * 2 + msg[index - 2];
-    piece = piece * 2 + msg[index - 3];
-    piece = piece * 2 + msg[index - 4];
-    piece = piece * 2 + msg[index - 5];
-    piece = piece * 2 + msg[index - 6];
-    piece = piece * 2 + msg[index - 7];
-    iTotal = iTotal + piece * multiplicationLevel;
-    multiplicationLevel = multiplicationLevel * 256;
-  }
-  increment <== iTotal;
-  
-  var aTotal = 0;
-  multiplicationLevel = 1;
-  
-  for (var i = 31; i >= 8; i--) {
-    var index = i * 8 + 7;
-    var piece = msg[index];
-    piece = piece * 2 + msg[index - 1];
-    piece = piece * 2 + msg[index - 2];
-    piece = piece * 2 + msg[index - 3];
-    piece = piece * 2 + msg[index - 4];
-    piece = piece * 2 + msg[index - 5];
-    piece = piece * 2 + msg[index - 6];
-    piece = piece * 2 + msg[index - 7];
-    aTotal = aTotal + piece * multiplicationLevel;
-    multiplicationLevel = multiplicationLevel * 256;
-  }
-  address <== aTotal;
+  component addressAnalytic = AnalyticMessage(8, 31);
+  addressAnalytic.msg <== msg;
+  address <== addressAnalytic.result;
 }
 
 component main = Guardian();
