@@ -10,11 +10,11 @@ TARGET_MAX_CHAR_NUM = 20
 
 ## Compile circom. | Run
 compile:
-	circom $(name).circom --r1cs --wasm
+	circom $(name).circom --r1cs --wasm --sym
 
 ## Compute witness with WebAssembly.
 witness:
-	node $(name)_js/generate_witness.js $(name)_js/$(name).wasm $(name)_input.json $(name)_witness.wtns
+	node $(name)_js/generate_witness.js $(name)_js/$(name).wasm inputs/$(name)_input.json $(name)_witness.wtns
 
 ## Provide a power.
 power:
@@ -48,6 +48,7 @@ clear:
 	rm -f *.r1cs
 	rm -f *.ptau
 	rm -f *.wtns
+	rm -f *.sym
 	rm -f *.sol
 	rm -f proof.json
 	rm -f public.json
